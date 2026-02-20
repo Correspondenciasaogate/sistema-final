@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Gate/Way</title>
+    <title>Controle de Encomendas</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
 
@@ -20,21 +20,21 @@
             <form id="formRecebimento">
                 <input type="hidden" id="editId">
                 <div class="campo-grupo">
-                    <div style="display: flex; gap: 5px; flex: 2;">
-                        <input type="text" id="notaFiscal" required placeholder="Nota Fiscal" style="flex: 1;">
-                        <button type="button" onclick="iniciarLeitor()" style="background: #15803d; color: white; border: none; border-radius: 4px; padding: 0 15px; cursor: pointer;">📷</button>
+                    <div style="display:flex; gap:5px; flex:2;">
+                        <input type="text" id="notaFiscal" required placeholder="Nota Fiscal" style="flex:1;">
+                        <button type="button" onclick="iniciarLeitor()" style="padding:10px; background:#15803d; color:white; border:none; border-radius:4px;">📷</button>
                     </div>
-                    <select id="torre" required onchange="buscarContatoAutomatico()" style="flex: 1;">
+                    <select id="torre" required onchange="buscarContatoAutomatico()" style="flex:1;">
                         <option value="">Torre</option>
                         <option value="Gate">Gate</option>
                         <option value="Way">Way</option>
                     </select>
-                    <input type="text" id="sala" required placeholder="Sala" oninput="buscarContatoAutomatico()" style="flex: 1;">
+                    <input type="text" id="sala" required placeholder="Sala" oninput="buscarContatoAutomatico()" style="flex:1;">
                 </div>
 
-                <div id="area-scanner" style="display:none; margin: 15px 0; border: 2px solid #15803d; border-radius: 8px; overflow: hidden; background: #000;">
-                    <div id="reader" style="width: 100%;"></div>
-                    <button type="button" onclick="pararLeitor()" style="width: 100%; padding: 12px; background: #dc2626; color: white; border: none; font-weight: bold; cursor: pointer;">CANCELAR LEITURA</button>
+                <div id="area-scanner" style="display:none; margin:10px 0; border:2px solid #15803d; border-radius:8px; overflow:hidden;">
+                    <div id="reader"></div>
+                    <button type="button" onclick="pararLeitor()" style="width:100%; padding:10px; background:red; color:white; border:none;">Fechar Câmera</button>
                 </div>
 
                 <div class="campo-grupo">
@@ -45,18 +45,57 @@
             </form>
         </div>
 
-        <div id="dashboard">
-            <div class="card">Total: <span id="dashTotal">0</span></div>
-            <div class="card">Aguardando: <span id="dashAguardando">0</span></div>
+        <div id="secaoFiltros" class="container">
+            <h3>🔍 Filtros e Busca</h3>
+            <div class="filtros-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px;">
+                <input type="date" id="filtroData" oninput="aplicarFiltros()">
+                <input type="text" id="filtroSala" placeholder="Sala" oninput="aplicarFiltros()">
+                <input type="text" id="filtroNome" placeholder="Nome" oninput="aplicarFiltros()">
+                <input type="text" id="filtroNF" placeholder="NF" oninput="aplicarFiltros()">
+                <select id="filtroStatus" onchange="aplicarFiltros()">
+                    <option value="">Todos</option>
+                    <option value="Aguardando retirada">Aguardando</option>
+                    <option value="Retirado">Retirado</option>
+                </select>
+            </div>
+            <button onclick="visualizarTudo()" style="margin-top:10px; width:100%;">🧹 Limpar Filtros</button>
+        </div>
+
+        <div id="dashboard" style="display:flex; gap:10px; margin:10px 0;">
+            <div class="card" style="flex:1; background:#eee; padding:10px; text-align:center; border-radius:8px;">
+                Total: <span id="dashTotal">0</span>
+            </div>
+            <div class="card" style="flex:1; background:#fff3cd; padding:10px; text-align:center; border-radius:8px;">
+                Aguardando: <span id="dashAguardando">0</span>
+            </div>
+            <div class="card" style="flex:1; background:#d4edda; padding:10px; text-align:center; border-radius:8px;">
+                Retirados: <span id="dashRetirados">0</span>
+            </div>
         </div>
 
         <div class="container">
             <div class="table-responsive">
-                <table>
-                    <thead><tr><th>Data</th><th>NF</th><th>Sala</th><th>Nome</th><th>Ação</th></tr></thead>
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f4f4f4;">
+                            <th>Data</th><th>NF</th><th>Sala</th><th>Torre</th><th>Nome</th><th>Status</th><th>Ação</th>
+                        </tr>
+                    </thead>
                     <tbody id="listaCorpo"></tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <div class="lateral-acoes">
+        <div class="container">
+            <h3>📌 Detalhes</h3>
+            <div id="resultadoConteudo"></div>
+        </div>
+        <div id="blocoConfirmarRetirada" class="container" style="display:none;">
+            <h3>✅ Entrega</h3>
+            <canvas id="canvasAssinatura" width="300" height="150" style="border:1px solid #ccc; width:100%;"></canvas>
+            <button onclick="finalizarEntrega()" style="width:100%; margin-top:10px; background:green; color:white; padding:10px; border:none;">Confirmar Retirada</button>
         </div>
     </div>
 </main>
