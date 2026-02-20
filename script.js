@@ -484,4 +484,41 @@ function selecionarUnica(id) {
     } else {
         blocoR.style.display = 'none';
     }
+    let html5QrCode;
+
+function iniciarLeitor() {
+    const readerDiv = document.getElementById('reader');
+    readerDiv.style.display = 'block';
+
+    html5QrCode = new Html5Qrcode("reader");
+    
+    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+
+    // Inicia a câmera traseira
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        config,
+        (decodedText) => {
+            // Quando a leitura der certo:
+            document.getElementById('notaFiscal').value = decodedText;
+            pararLeitor();
+            
+            // Feedback visual de sucesso
+            alert("Código lido com sucesso: " + decodedText);
+        },
+        (errorMessage) => {
+            // Erros de foco são normais e podem ser ignorados
+        }
+    ).catch((err) => {
+        alert("Erro ao abrir a câmera: " + err);
+    });
 }
+
+function pararLeitor() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('reader').style.display = 'none';
+        });
+    }
+}
+
