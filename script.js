@@ -93,7 +93,7 @@ const agendaMoradores = {
     "Way1101": "11958113536", "Way1102": "11958113536", "Way1103": "11958113536",
     "Way1104": "11997073515", "Way1105": "11997073515", "Way1106": "11997073515",
     "Way1107": "11997073515", "Way1108": "11958113536","Way1110": "11958113536", "Way1201": "11979569039", "Way1202": "11993936531",
-    "Way1205": "11983077846", "Way1206": "11988971195", "Way1208": "11933931917", "Way1302": "11989555962",
+    "Way1205": "1183077846", "Way1206": "11988971195", "Way1208": "11933931917", "Way1302": "11989555962",
     "Way1303": "11975153885", "Way1306": "1142294029", "Way1307": "11937469366", "Way1310": "11953632530",
     "Way1401": "11942999009", "Way1403": "11941928289", "Way1404": "11994783019", "Way1405": "11963315000",
     "Way1406": "11989690868", "Way1409": "11989690868", "Way1501": "11941283021", "Way1502": "11950437885",
@@ -109,7 +109,6 @@ window.onload = () => {
     renderizarTabela();
     atualizarDashboard();
 
-    // Eventos para busca de contato (Input, Keyup e Change)
     const elSala = document.getElementById('sala');
     const elTorre = document.getElementById('torre');
 
@@ -138,17 +137,11 @@ function buscarContatoAutomatico() {
 
     const torre = elTorre.value.trim();
     const sala = elSala.value.trim();
-    
-    // Monta a chave exatamente como no objeto agendaMoradores
     const chave = torre + sala;
-
-    // Log para você ver no console (F12) o que o sistema está tentando ler
-    console.log("Buscando contato para:", chave);
 
     if (agendaMoradores[chave]) {
         campoTelefone.value = agendaMoradores[chave];
         campoTelefone.style.backgroundColor = "#e8f5e9";
-        console.log("Sucesso: Contato encontrado!");
     } else {
         campoTelefone.value = "";
         campoTelefone.style.backgroundColor = "";
@@ -170,22 +163,15 @@ function atualizarDashboard() {
 function enviarZap(item, tipo) {
     if (!item.telefone) return;
     const tel = item.telefone.replace(/\D/g, '');
-    
     const horaAgora = new Date().getHours();
-    const minAgora = new Date().getMinutes();
-    const tempoTotalMinutos = (horaAgora * 60) + minAgora;
+    const tempoTotalMinutos = (horaAgora * 60) + new Date().getMinutes();
     
-    let saudacao = "Olá";
-    if (tempoTotalMinutos < 720) { saudacao = "Bom dia"; } 
-    else if (tempoTotalMinutos <= 1110) { saudacao = "Boa tarde"; } 
-    else { saudacao = "Boa noite"; }
+    let saudacao = (tempoTotalMinutos < 720) ? "Bom dia" : (tempoTotalMinutos <= 1110) ? "Boa tarde" : "Boa noite";
 
-    let msg = "";
-    if (tipo === 'chegada') {
-        msg = `${saudacao}, *${item.destinatario}*! 📦\nSua encomenda (NF: *${item.nf}*) chegou no -1 setor de Encomendas.\n*Sala ${item.sala}* (${item.torre}).`;
-    } else {
-        msg = `✅ *Confirmação de Retirada*\n${saudacao}, *${item.destinatario}*!\nSua encomenda (NF: *${item.nf}*) foi retirada por *${item.quemRetirou}* em ${item.dataRetirada}.`;
-    }
+    let msg = (tipo === 'chegada') 
+        ? `${saudacao}, *${item.destinatario}*! 📦\nSua encomenda (NF: *${item.nf}*) chegou no -1 setor de Encomendas.\n*Sala ${item.sala}* (${item.torre}).`
+        : `✅ *Confirmação de Retirada*\n${saudacao}, *${item.destinatario}*!\nSua encomenda (NF: *${item.nf}*) foi retirada por *${item.quemRetirou}* em ${item.dataRetirada}.`;
+
     window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
 }
 
@@ -285,9 +271,7 @@ function renderizarTabela(dados = encomendas) {
         const dataB = b.data.split('/').reverse().join('');
         if (dataA !== dataB) return dataB.localeCompare(dataA);
         if (a.torre !== b.torre) return a.torre === "Gate" ? -1 : 1;
-        const salaA = parseInt(a.sala.replace(/\D/g, '')) || 0;
-        const salaB = parseInt(b.sala.replace(/\D/g, '')) || 0;
-        return salaA - salaB;
+        return (parseInt(a.sala.replace(/\D/g, '')) || 0) - (parseInt(b.sala.replace(/\D/g, '')) || 0);
     });
 
     ordenados.forEach(item => {
@@ -416,11 +400,7 @@ function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); 
 function enviarZapManual(id) { enviarZap(encomendas.find(e => e.id === id), 'chegada'); }
 
 function visualizarTudo() {
-    document.getElementById('filtroData').value = "";
-    document.getElementById('filtroSala').value = "";
-    document.getElementById('filtroNome').value = "";
-    document.getElementById('filtroNF').value = "";
-    document.getElementById('filtroStatus').value = "";
+    ['filtroData', 'filtroSala', 'filtroNome', 'filtroNF', 'filtroStatus'].forEach(id => document.getElementById(id).value = "");
     renderizarTabela(encomendas);
     document.getElementById('resultadoConteudo').innerHTML = '<p class="placeholder-text">Clique em uma nota ou use os filtros.</p>';
     document.getElementById('blocoConfirmarRetirada').style.display = 'none';
@@ -437,17 +417,12 @@ function apagar(id) {
 
 function exportarCSV() {
     if (encomendas.length === 0) return alert("Nenhuma mercadoria para exportar.");
-    let csv = "\ufeff"; 
-    csv += "Data;NF;Torre;Sala;Destinatario;Status;Quem Retirou;Data Retirada\n";
-    encomendas.forEach(e => {
-        csv += `${e.data};${e.nf};${e.torre};${e.sala};${e.destinatario};${e.status};${e.quemRetirou};${e.dataRetirada}\n`;
-    });
+    let csv = "\ufeffData;NF;Torre;Sala;Destinatario;Status;Quem Retirou;Data Retirada\n";
+    encomendas.forEach(e => csv += `${e.data};${e.nf};${e.torre};${e.sala};${e.destinatario};${e.status};${e.quemRetirou};${e.dataRetirada}\n`);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
+    link.setAttribute("href", URL.createObjectURL(blob));
     link.setAttribute("download", `Relatorio_GateWay_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.csv`);
-    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -455,19 +430,12 @@ function exportarCSV() {
 
 window.onscroll = function() {
     const btn = document.getElementById("btnTopo");
-    if (!btn) return;
-    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-        btn.style.display = "block";
-    } else {
-        btn.style.display = "none";
-    }
+    if (btn) btn.style.display = (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) ? "block" : "none";
 };
 
-function voltarAoTopo() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+function voltarAoTopo() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-// ================= SISTEMA DE CÂMERA (RESTAURADO) =================
+// ================= SISTEMA DE CÂMERA =================
 let html5QrCode;
 
 function iniciarLeitor() {
@@ -475,34 +443,25 @@ function iniciarLeitor() {
     if (readerDiv) readerDiv.style.display = 'block';
     
     html5QrCode = new Html5Qrcode("reader");
-    
-    const config = { 
-        fps: 10, 
-        qrbox: { width: 250, height: 150 } 
-    };
+    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
 
     html5QrCode.start(
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
+            // Preenche o campo e para o leitor, mas deixa o campo manual livre
             document.getElementById('notaFiscal').value = decodedText;
             pararLeitor();
-            // Somente um aviso rápido ou log, para não travar a experiência
-            console.log("Leitura: " + decodedText);
         },
-        (errorMessage) => {
-            // Ignorado para manter a performance durante a busca do foco
-        }
-    ).catch((err) => {
-        alert("Erro ao abrir a câmera: " + err);
-    });
+        () => {} // Ignora erros de leitura de frame para não travar
+    ).catch(err => alert("Erro ao abrir a câmera: " + err));
 }
 
 function pararLeitor() {
     if (html5QrCode) {
         html5QrCode.stop().then(() => {
-            const readerDiv = document.getElementById('reader');
-            if (readerDiv) readerDiv.style.display = 'none';
-        }).catch((err) => console.error("Erro ao parar leitor", err));
+            const rd = document.getElementById('reader');
+            if (rd) rd.style.display = 'none';
+        }).catch(err => console.error("Erro ao parar leitor", err));
     }
 }
