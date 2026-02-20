@@ -436,3 +436,52 @@ function exportarCSV() {
     link.click();
     document.body.removeChild(link);
 }
+// Mostrar/Esconder botão de topo ao rolar a página
+window.onscroll = function() {
+    const btn = document.getElementById("btnTopo");
+    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+        btn.style.display = "block";
+    } else {
+        btn.style.display = "none";
+    }
+};
+
+function voltarAoTopo() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Melhoria: Ao clicar na linha, rolar automaticamente para a área de assinatura
+function selecionarUnica(id) {
+    selecionadaId = id;
+    const item = encomendas.find(e => e.id === id);
+    if (!item) return;
+    
+    document.getElementById('resultadoConteudo').innerHTML = `
+        <div id="detalheFocado" style="border-left:5px solid #15803d; background:#fff; padding:15px; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <p><strong>📦 NF:</strong> ${item.nf} | <strong>Sala:</strong> ${item.sala} (${item.torre})</p>
+            <p><strong>👤 Nome:</strong> ${item.destinatario}</p>
+            <p><strong>🚩 Status:</strong> ${item.status}</p>
+            ${item.status === 'Retirado' ? `
+                <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+                    <p style="color:green; font-weight:bold;">✅ Retirado por: ${item.quemRetirou}</p>
+                    <p><small>${item.dataRetirada}</small></p>
+                    <p><strong>Assinatura:</strong></p>
+                    <img src="${item.assinatura}" style="width:100%; border:1px solid #ddd; background:#fff; border-radius:4px;" />
+                </div>
+            ` : `
+                <button onclick="enviarZapManual(${item.id})" style="background:#25d366; color:white; border:none; padding:12px; width:100%; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;">Reenviar Aviso WhatsApp</button>
+            `}
+        </div>
+    `;
+
+    const blocoR = document.getElementById('blocoConfirmarRetirada');
+    if (item.status === 'Aguardando retirada') {
+        blocoR.style.display = 'block';
+        setTimeout(configurarCanvas, 100);
+        
+        // ROLAR AUTOMATICAMENTE PARA A ASSINATURA (Melhoria solicitada)
+        blocoR.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        blocoR.style.display = 'none';
+    }
+}
