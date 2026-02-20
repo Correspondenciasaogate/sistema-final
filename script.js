@@ -468,29 +468,45 @@ function voltarAoTopo() {
 }
 
 let html5QrCode;
+let html5QrCode;
+
 function iniciarLeitor() {
-    const readerDiv = document.getElementById('reader');
-    readerDiv.style.display = 'block';
+    const areaScanner = document.getElementById('area-scanner');
+    areaScanner.style.display = 'block'; // Mostra o bloco da câmera
+
     html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+    const config = { 
+        fps: 15, 
+        qrbox: { width: 250, height: 150 },
+        aspectRatio: 1.777778 // Formato wide para pegar códigos de barra longos
+    };
+
     html5QrCode.start(
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
             document.getElementById('notaFiscal').value = decodedText;
-            pararLeitor();
-            alert("Código lido com sucesso: " + decodedText);
+            pararLeitor(); // Fecha a câmera após ler
+            vibratePhone(); // Feedback tátil
         },
-        (errorMessage) => {}
+        (errorMessage) => { /* Erros de busca de código são ignorados para não travar */ }
     ).catch((err) => {
-        alert("Erro ao abrir a câmera: " + err);
+        alert("Erro ao acessar câmera: " + err);
+        areaScanner.style.display = 'none';
     });
 }
 
 function pararLeitor() {
     if (html5QrCode) {
         html5QrCode.stop().then(() => {
-            document.getElementById('reader').style.display = 'none';
-        });
+            document.getElementById('area-scanner').style.display = 'none';
+        }).catch(err => console.error("Erro ao parar leitor", err));
+    } else {
+        document.getElementById('area-scanner').style.display = 'none';
     }
+}
+
+function vibratePhone() {
+    if (navigator.vibrate) navigator.vibrate(100);
+}
 }
