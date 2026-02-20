@@ -1,15 +1,10 @@
-// ================= CONFIGURAÇÃO E VARIÁVEIS =================
-const CONFIG = {
-    NOME_SISTEMA: "Controle de Encomendas - Gate/Way",
-    ID_CLIENTE: "banco_dados_gateway_v2",
-};
-
-let encomendas = JSON.parse(localStorage.getItem(CONFIG.ID_CLIENTE)) || [];
+// ================= VARIÁVEIS GLOBAIS =================
+let encomendas = JSON.parse(localStorage.getItem('banco_encomendas')) || [];
 let selecionadaId = null;
-let canvas, ctx, desenhando = false;
 let html5QrCode;
+let canvas, ctx, desenhando = false;
 
-// ================= AGENDA DE MORADORES (Sua lista completa) =================
+// ================= AGENDA DE MORADORES =================
 const agendaMoradores = {
     "Gate002": "11994392466", "Gate004": "11958649090", "Gate007": "11958649090", "Gate101": "11979861261",
     "Gate102": "11915568088", "Gate103": "11915568088", "Gate104": "11971556999", "Gate105": "11971556999",
@@ -67,50 +62,42 @@ const agendaMoradores = {
 
 // ================= INICIALIZAÇÃO =================
 window.onload = () => {
-    document.title = CONFIG.NOME_SISTEMA;
     renderizarTabela();
     atualizarDashboard();
 };
 
+// ================= BUSCA AUTOMÁTICA DE CONTATO =================
 function buscarContatoAutomatico() {
-    const elTorre = document.getElementById('torre');
-    const elSala = document.getElementById('sala');
-    const elTel = document.getElementById('telefone');
-    if (!elTorre || !elSala || !elTel) return;
+    const torre = document.getElementById('torre').value;
+    const sala = document.getElementById('sala').value;
+    const campoTel = document.getElementById('telefone');
+    const chave = torre + sala;
 
-    const chave = elTorre.value.trim() + elSala.value.trim();
     if (agendaMoradores[chave]) {
-        elTel.value = agendaMoradores[chave];
-        elTel.style.backgroundColor = "#e8f5e9";
+        campoTel.value = agendaMoradores[chave];
+        campoTel.style.background = "#e8f5e9";
     } else {
-        elTel.value = "";
-        elTel.style.backgroundColor = "";
+        campoTel.value = "";
+        campoTel.style.background = "";
     }
 }
 
-// ================= SCANNER (CORRIGIDO PARA CELULAR) =================
-async function iniciarLeitor() {
-    const area = document.getElementById('area-scanner');
-    area.style.display = 'block';
-    
-    // Se o site não for HTTPS, a câmera não abre na maioria dos celulares
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        alert("Atenção: A câmera exige uma conexão segura (HTTPS).");
-    }
-
+// ================= SCANNER (CORRIGIDO) =================
+function iniciarLeitor() {
+    document.getElementById('area-scanner').style.display = 'block';
     html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 15, qrbox: { width: 250, height: 150 } };
-
-    try {
-        await html5QrCode.start({ facingMode: "environment" }, config, (text) => {
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (text) => {
             document.getElementById('notaFiscal').value = text;
             pararLeitor();
-            if (navigator.vibrate) navigator.vibrate(100);
-        });
-    } catch (err) {
-        alert("Erro na câmera: Certifique-se de dar permissão e usar HTTPS.");
-        area.style.display = 'none';
-    }
+        },
+        () => {}
+    ).catch(err => {
+        alert("Erro na câmera: Certifique-se de usar HTTPS e dar permissão.");
+        document.getElementById('area-scanner').style.display = 'none';
+    });
 }
 
 function pararLeitor() {
@@ -121,7 +108,7 @@ function pararLeitor() {
     }
 }
 
-// ================= FUNÇÕES DE FILTRO (RESTAURADAS) =================
+// ================= FILTROS E TABELA =================
 function aplicarFiltros() {
     const fData = document.getElementById('filtroData').value;
     const fSala = document.getElementById('filtroSala').value.toLowerCase();
@@ -130,8 +117,8 @@ function aplicarFiltros() {
     const fStatus = document.getElementById('filtroStatus').value;
 
     const filtrados = encomendas.filter(e => {
-        const dataFormatada = e.data.split('/').reverse().join('-');
-        return (fData === "" || dataFormatada === fData) &&
+        const dFormat = e.data.split('/').reverse().join('-');
+        return (fData === "" || dFormat === fData) &&
                (fSala === "" || e.sala.toLowerCase().includes(fSala)) &&
                (fNome === "" || e.destinatario.toLowerCase().includes(fNome)) &&
                (fNF === "" || e.nf.toLowerCase().includes(fNF)) &&
@@ -149,76 +136,135 @@ function renderizarTabela(dados = encomendas) {
         tr.innerHTML = `
             <td>${item.data}</td>
             <td>${item.nf}</td>
-            <td style="font-weight:bold;">${item.sala}</td>
+            <td><strong>${item.sala}</strong></td>
             <td>${item.torre}</td>
             <td>${item.destinatario}</td>
             <td style="color:${item.status === 'Retirado' ? 'green' : 'orange'}">${item.status}</td>
-            <td><button onclick="event.stopPropagation(); editar(${item.id})">✏️</button></td>
+            <td>
+                <button onclick="event.stopPropagation(); editar(${item.id})">✏️</button>
+                <button onclick="event.stopPropagation(); excluir(${item.id})">🗑️</button>
+            </td>
         `;
         corpo.appendChild(tr);
     });
-}
-
-// ================= DEMAIS FUNÇÕES (SALVAR, DASHBOARD, ETC) =================
-function salvarEAtualizar() {
-    localStorage.setItem(CONFIG.ID_CLIENTE, JSON.stringify(encomendas));
-    renderizarTabela();
     atualizarDashboard();
 }
 
-function atualizarDashboard() {
-    const aguardando = encomendas.filter(e => e.status === 'Aguardando retirada').length;
-    const retirados = encomendas.filter(e => e.status === 'Retirado').length;
-    document.getElementById('dashTotal').innerText = encomendas.length;
-    document.getElementById('dashAguardando').innerText = aguardando;
-    document.getElementById('dashRetirados').innerText = retirados;
+// ================= DETALHES NA LATERAL =================
+function selecionarUnica(id) {
+    selecionadaId = id;
+    const item = encomendas.find(e => e.id === id);
+    const cont = document.getElementById('resultadoConteudo');
+    
+    cont.innerHTML = `
+        <div style="padding:10px; background:#f0f7f0; border-radius:5px;">
+            <p><strong>NF:</strong> ${item.nf}</p>
+            <p><strong>Destinatário:</strong> ${item.destinatario}</p>
+            <p><strong>Unidade:</strong> ${item.sala} - ${item.torre}</p>
+            <p><strong>Telefone:</strong> ${item.telefone || 'N/A'}</p>
+            <p><strong>Status:</strong> ${item.status}</p>
+        </div>
+    `;
+
+    document.getElementById('blocoConfirmarRetirada').style.display = item.status === 'Retirado' ? 'none' : 'block';
+    if(item.status !== 'Retirado') configurarCanvas();
 }
 
-document.getElementById('formRecebimento').addEventListener('submit', function(e) {
+// ================= SALVAR E EXCLUIR =================
+document.getElementById('formRecebimento').onsubmit = function(e) {
     e.preventDefault();
-    const idExistente = document.getElementById('editId').value;
-    const dados = {
-        id: idExistente ? parseInt(idExistente) : Date.now(),
+    const editId = document.getElementById('editId').value;
+    
+    const nova = {
+        id: editId ? parseInt(editId) : Date.now(),
         nf: document.getElementById('notaFiscal').value,
         torre: document.getElementById('torre').value,
         sala: document.getElementById('sala').value,
         destinatario: document.getElementById('destinatario').value,
         telefone: document.getElementById('telefone').value,
-        data: idExistente ? encomendas.find(x => x.id == idExistente).data : new Date().toLocaleDateString('pt-BR'),
-        status: idExistente ? encomendas.find(x => x.id == idExistente).status : 'Aguardando retirada'
+        data: editId ? encomendas.find(x => x.id == editId).data : new Date().toLocaleDateString('pt-BR'),
+        status: editId ? encomendas.find(x => x.id == editId).status : 'Aguardando retirada'
     };
 
-    if (idExistente) {
-        const index = encomendas.findIndex(en => en.id == idExistente);
-        encomendas[index] = dados;
+    if(editId) {
+        const idx = encomendas.findIndex(x => x.id == editId);
+        encomendas[idx] = nova;
     } else {
-        encomendas.push(dados);
+        encomendas.push(nova);
     }
-    salvarEAtualizar();
+
+    localStorage.setItem('banco_encomendas', JSON.stringify(encomendas));
     this.reset();
     document.getElementById('editId').value = "";
-});
+    renderizarTabela();
+};
 
-function selecionarUnica(id) {
-    selecionadaId = id;
-    const item = encomendas.find(e => e.id === id);
-    const cont = document.getElementById('resultadoConteudo');
-    cont.innerHTML = `
-        <div style="padding:10px; border-left:4px solid #15803d; background:#f9f9f9;">
-            <p><strong>NF:</strong> ${item.nf}</p>
-            <p><strong>Destinatário:</strong> ${item.destinatario}</p>
-            <p><strong>Status:</strong> ${item.status}</p>
-        </div>
-    `;
-    document.getElementById('blocoConfirmarRetirada').style.display = item.status === 'Retirado' ? 'none' : 'block';
-    if(item.status !== 'Retirado') configurarCanvas();
+function excluir(id) {
+    if(confirm("Deseja apagar este registro?")) {
+        encomendas = encomendas.filter(e => e.id !== id);
+        localStorage.setItem('banco_encomendas', JSON.stringify(encomendas));
+        renderizarTabela();
+    }
 }
 
+function editar(id) {
+    const item = encomendas.find(e => e.id === id);
+    document.getElementById('editId').value = item.id;
+    document.getElementById('notaFiscal').value = item.nf;
+    document.getElementById('torre').value = item.torre;
+    document.getElementById('sala').value = item.sala;
+    document.getElementById('destinatario').value = item.destinatario;
+    document.getElementById('telefone').value = item.telefone;
+    document.getElementById('btnCancelarEdit').style.display = 'block';
+    window.scrollTo(0,0);
+}
+
+function cancelarEdicao() {
+    document.getElementById('formRecebimento').reset();
+    document.getElementById('editId').value = "";
+    document.getElementById('btnCancelarEdit').style.display = 'none';
+}
+
+// ================= DASHBOARD =================
+function atualizarDashboard() {
+    document.getElementById('dashTotal').innerText = encomendas.length;
+    document.getElementById('dashAguardando').innerText = encomendas.filter(e => e.status === 'Aguardando retirada').length;
+    document.getElementById('dashRetirados').innerText = encomendas.filter(e => e.status === 'Retirado').length;
+}
+
+// ================= EXPORTAR EXCEL (CSV) =================
+function exportarCSV() {
+    let csv = 'Data;NF;Sala;Torre;Destinatario;Status\n';
+    encomendas.forEach(e => {
+        csv += `${e.data};${e.nf};${e.sala};${e.torre};${e.destinatario};${e.status}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "relatorio_encomendas.csv";
+    link.click();
+}
+
+// ================= BOTÃO VOLTAR AO TOPO =================
+window.onscroll = function() {
+    const btn = document.getElementById("btnTopo");
+    if (document.documentElement.scrollTop > 100) { btn.style.display = "block"; } 
+    else { btn.style.display = "none"; }
+};
+function voltarAoTopo() { window.scrollTo({top: 0, behavior: 'smooth'}); }
+
+function visualizarTudo() {
+    document.getElementById('secaoFiltros').querySelectorAll('input, select').forEach(i => i.value = "");
+    renderizarTabela();
+}
+
+// ================= ASSINATURA =================
 function configurarCanvas() {
     canvas = document.getElementById('canvasAssinatura');
     ctx = canvas.getContext('2d');
+    ctx.lineWidth = 2;
     canvas.onmousedown = () => desenhando = true;
-    window.onmouseup = () => desenhando = false;
+    window.onmouseup = () => { desenhando = false; ctx.beginPath(); };
     canvas.onmousemove = (e) => {
         if (!desenhando) return;
         const rect = canvas.getBoundingClientRect();
@@ -226,19 +272,12 @@ function configurarCanvas() {
         ctx.stroke();
     };
 }
-
+function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 function finalizarEntrega() {
-    const index = encomendas.findIndex(e => e.id === selecionadaId);
-    encomendas[index].status = 'Retirado';
-    salvarEAtualizar();
-    document.getElementById('blocoConfirmarRetirada').style.display = 'none';
-}
-
-function visualizarTudo() {
-    document.getElementById('filtroData').value = "";
-    document.getElementById('filtroSala').value = "";
-    document.getElementById('filtroNome').value = "";
-    document.getElementById('filtroNF').value = "";
-    document.getElementById('filtroStatus').value = "";
+    const idx = encomendas.findIndex(e => e.id === selecionadaId);
+    encomendas[idx].status = 'Retirado';
+    localStorage.setItem('banco_encomendas', JSON.stringify(encomendas));
     renderizarTabela();
+    document.getElementById('blocoConfirmarRetirada').style.display = 'none';
+    alert("Entrega finalizada com sucesso!");
 }
