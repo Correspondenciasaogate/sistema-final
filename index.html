@@ -1,55 +1,66 @@
-let html5QrCode;
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Gate/Way</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
 
-async function iniciarLeitor() {
-    const areaScanner = document.getElementById('area-scanner');
-    areaScanner.style.display = 'block';
+<header>
+    <h1>Controle de Encomendas</h1>
+</header>
 
-    // Verifica se o site está em HTTPS (obrigatório para câmera no celular)
-    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        alert("Erro: A câmera só funciona em sites seguros (HTTPS).");
-        areaScanner.style.display = 'none';
-        return;
-    }
+<main>
+    <div class="coluna-dados">
+        <div id="blocoRecebimento" class="container">
+            <h2 id="tituloForm">📦 Novo Recebimento</h2>
+            <form id="formRecebimento">
+                <input type="hidden" id="editId">
+                <div class="campo-grupo">
+                    <div style="display: flex; gap: 5px; flex: 2;">
+                        <input type="text" id="notaFiscal" required placeholder="Nota Fiscal" style="flex: 1;">
+                        <button type="button" onclick="iniciarLeitor()" style="background: #15803d; color: white; border: none; border-radius: 4px; padding: 0 15px; cursor: pointer;">📷</button>
+                    </div>
+                    <select id="torre" required onchange="buscarContatoAutomatico()" style="flex: 1;">
+                        <option value="">Torre</option>
+                        <option value="Gate">Gate</option>
+                        <option value="Way">Way</option>
+                    </select>
+                    <input type="text" id="sala" required placeholder="Sala" oninput="buscarContatoAutomatico()" style="flex: 1;">
+                </div>
 
-    // Instancia o leitor
-    html5QrCode = new Html5Qrcode("reader");
+                <div id="area-scanner" style="display:none; margin: 15px 0; border: 2px solid #15803d; border-radius: 8px; overflow: hidden; background: #000;">
+                    <div id="reader" style="width: 100%;"></div>
+                    <button type="button" onclick="pararLeitor()" style="width: 100%; padding: 12px; background: #dc2626; color: white; border: none; font-weight: bold; cursor: pointer;">CANCELAR LEITURA</button>
+                </div>
 
-    const config = { 
-        fps: 10, 
-        qrbox: { width: 280, height: 150 }, // Tamanho ideal para código de barras
-        aspectRatio: 1.0 
-    };
+                <div class="campo-grupo">
+                    <input type="text" id="destinatario" required placeholder="Nome do Destinatário">
+                    <input type="tel" id="telefone" placeholder="Telefone">
+                </div>
+                <button type="submit" id="btnSalvar" class="btn-principal">Salvar Mercadoria</button>
+            </form>
+        </div>
 
-    try {
-        await html5QrCode.start(
-            { facingMode: "environment" }, // Força a câmera traseira
-            config,
-            (decodedText) => {
-                document.getElementById('notaFiscal').value = decodedText;
-                pararLeitor();
-                if (navigator.vibrate) navigator.vibrate(100); // Vibra ao ler
-            },
-            (errorMessage) => { 
-                // Apenas ignora erros de busca (quando não detecta código na imagem)
-            }
-        );
-    } catch (err) {
-        console.error("Erro ao iniciar leitor:", err);
-        alert("Câmera bloqueada ou não encontrada. Verifique as permissões do seu navegador.");
-        areaScanner.style.display = 'none';
-    }
-}
+        <div id="dashboard">
+            <div class="card">Total: <span id="dashTotal">0</span></div>
+            <div class="card">Aguardando: <span id="dashAguardando">0</span></div>
+        </div>
 
-function pararLeitor() {
-    if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().then(() => {
-            document.getElementById('area-scanner').style.display = 'none';
-            html5QrCode.clear();
-        }).catch(err => {
-            console.log("Erro ao parar:", err);
-            document.getElementById('area-scanner').style.display = 'none';
-        });
-    } else {
-        document.getElementById('area-scanner').style.display = 'none';
-    }
-}
+        <div class="container">
+            <div class="table-responsive">
+                <table>
+                    <thead><tr><th>Data</th><th>NF</th><th>Sala</th><th>Nome</th><th>Ação</th></tr></thead>
+                    <tbody id="listaCorpo"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
