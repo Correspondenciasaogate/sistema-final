@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Mercadorias Pro</title>
+    <title>Controle de Encomendas - Gate/Way</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,20 +19,31 @@
             <h2 id="tituloForm">📦 Novo Recebimento</h2>
             <form id="formRecebimento">
                 <input type="hidden" id="editId">
+                
                 <div class="campo-grupo">
-                    <input type="text" id="notaFiscal" required placeholder="Nota Fiscal">
-                    <select id="torre" required>
+                    <div style="display: flex; gap: 5px; flex: 1;">
+                        <input type="text" id="notaFiscal" required placeholder="Nota Fiscal" style="flex: 1;">
+                        <button type="button" onclick="iniciarLeitor()" style="background: #eee; border: 1px solid #ccc; border-radius: 4px; cursor: pointer;">📷</button>
+                    </div>
+
+                    <select id="torre" required onchange="buscarContatoAutomatico()">
                         <option value="">Torre</option>
                         <option value="Gate">Gate</option>
                         <option value="Way">Way</option>
                     </select>
-                    <input type="text" id="sala" required placeholder="Sala/Apto">
+
+                    <input type="text" id="sala" required placeholder="Sala/Apto" oninput="buscarContatoAutomatico()">
                 </div>
+
                 <div class="campo-grupo">
                     <input type="text" id="destinatario" required placeholder="Nome do Destinatário">
-                    <input type="tel" id="telefone" placeholder="Telefone (Opcional)">
+                    <input type="tel" id="telefone" placeholder="Telefone (Auto-preenchimento)">
                 </div>
-                <p style="font-size: 0.8em; color: #666; margin-top: 5px;">💡 A foto deve ser enviada diretamente pelo WhatsApp.</p>
+
+                <div id="reader" style="display:none; width: 100%; margin-bottom: 10px;"></div>
+
+                <p style="font-size: 0.8em; color: #666; margin-top: 5px;">💡 O telefone é preenchido automaticamente ao digitar a sala.</p>
+                
                 <div style="display: flex; gap: 10px;">
                     <button type="submit" id="btnSalvar" class="btn-principal">Salvar Mercadoria</button>
                     <button type="button" id="btnCancelarEdit" class="btn-secundario" style="display:none; background:#666;" onclick="cancelarEdicao()">Cancelar</button>
@@ -44,9 +55,9 @@
             <h3>🔍 Filtros e Busca</h3>
             <div class="filtros-grid">
                 <input type="date" id="filtroData" oninput="aplicarFiltros()">
-                <input type="text" id="filtroSala" placeholder="Sala" oninput="aplicarFiltros()">
-                <input type="text" id="filtroNome" placeholder="Nome" oninput="aplicarFiltros()">
-                <input type="text" id="filtroNF" placeholder="NF" oninput="aplicarFiltros()">
+                <input type="text" id="filtroSala" placeholder="Filtrar Sala" oninput="aplicarFiltros()">
+                <input type="text" id="filtroNome" placeholder="Filtrar Nome" oninput="aplicarFiltros()">
+                <input type="text" id="filtroNF" placeholder="Filtrar NF" oninput="aplicarFiltros()">
                 <select id="filtroStatus" onchange="aplicarFiltros()">
                     <option value="">Status: Todos</option>
                     <option value="Aguardando retirada">Aguardando</option>
@@ -71,10 +82,17 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Data</th><th>NF</th><th>Sala</th><th>Torre</th><th>Destinatário</th><th>Status</th><th>Ação</th>
+                            <th>Data</th>
+                            <th>NF</th>
+                            <th>Sala</th>
+                            <th>Torre</th>
+                            <th>Destinatário</th>
+                            <th>Status</th>
+                            <th>Ação</th>
                         </tr>
                     </thead>
-                    <tbody id="listaCorpo"></tbody>
+                    <tbody id="listaCorpo">
+                        </tbody>
                 </table>
             </div>
         </div>
@@ -84,25 +102,28 @@
         <div id="resultadoBusca" class="container">
             <h3>📌 Detalhes da Seleção</h3>
             <div id="resultadoConteudo">
-                <p class="placeholder-text">Clique em uma nota ou use os filtros.</p>
+                <p class="placeholder-text">Clique em uma nota na tabela para ver detalhes ou confirmar retirada.</p>
             </div>
         </div>
 
         <div id="blocoConfirmarRetirada" class="container" style="display:none;">
             <h3 style="color:green; margin-top:0">✅ Confirmar Entrega</h3>
-            <input type="text" id="nomeRec" placeholder="Nome de quem retira" style="width:100%; margin-bottom:10px;">
+            <input type="text" id="nomeRec" placeholder="Nome de quem está retirando" style="width:100%; margin-bottom:10px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
             <label>Assinatura Digital:</label>
-            <div style="border: 1px dashed #ccc; background: #fff; margin: 10px 0;">
-                <canvas id="canvasAssinatura" width="340" height="150" style="width:100%;"></canvas>
+            <div style="border: 1px dashed #ccc; background: #fff; margin: 10px 0; border-radius: 8px; overflow: hidden;">
+                <canvas id="canvasAssinatura" width="340" height="150" style="width:100%; cursor: crosshair;"></canvas>
             </div>
             <div style="display: flex; gap: 5px;">
                 <button onclick="limparAssinatura()" class="btn-secundario" style="flex: 1;">Limpar</button>
-                <button onclick="finalizarEntrega()" class="btn-principal" style="flex: 2; background: green;">Finalizar</button>
+                <button onclick="finalizarEntrega()" class="btn-principal" style="flex: 2; background: green;">Finalizar e Avisar</button>
             </div>
         </div>
     </div>
 </main>
-<script src="script.js"></script>
-</body>
 
+<button id="btnTopo" onclick="voltarAoTopo()" style="display:none; position:fixed; bottom:20px; right:20px; background:#15803d; color:white; border:none; border-radius:50%; width:40px; height:40px; cursor:pointer; font-size:20px;">↑</button>
+
+<script src="https://unpkg.com/html5-qrcode"></script> <script src="script.js"></script>
+
+</body>
 </html>
