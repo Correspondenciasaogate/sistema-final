@@ -490,35 +490,35 @@ function iniciarLeitor() {
     const readerDiv = document.getElementById('reader');
     readerDiv.style.display = 'block';
 
-    html5QrCode = new Html5Qrcode("reader");
-    
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-
-    // Inicia a câmera traseira
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        config,
-        (decodedText) => {
-            // Quando a leitura der certo:
-            document.getElementById('notaFiscal').value = decodedText;
-            pararLeitor();
-            
-            // Feedback visual de sucesso
-            alert("Código lido com sucesso: " + decodedText);
-        },
-        (errorMessage) => {
-            // Erros de foco são normais e podem ser ignorados
-        }
-    ).catch((err) => {
-        alert("Erro ao abrir a câmera: " + err);
-    });
-}
-
-function pararLeitor() {
+    // Se já houver uma instância rodando, para ela antes de começar
     if (html5QrCode) {
         html5QrCode.stop().then(() => {
-            document.getElementById('reader').style.display = 'none';
-        });
+            começarScan();
+        }).catch(() => começarScan());
+    } else {
+        começarScan();
     }
 }
 
+function começarScan() {
+    html5QrCode = new Html5Qrcode("reader");
+    const config = { 
+        fps: 10, 
+        qrbox: { width: 250, height: 150 },
+        aspectRatio: 1.0 
+    };
+
+    html5QrCode.start(
+        { facingMode: "environment" }, // Força a câmera traseira
+        config,
+        (decodedText) => {
+            document.getElementById('notaFiscal').value = decodedText;
+            pararLeitor();
+            // Som de sucesso (opcional)
+            navigator.vibrate(100); 
+        }
+    ).catch(err => {
+        console.error(err);
+        alert("Erro: Certifique-se de dar permissão à câmera nas configurações do seu navegador.");
+    });
+}
