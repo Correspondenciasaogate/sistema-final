@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Encomendas </title>
+    <title>Controle de Encomendas - Gate & Way</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 
@@ -19,20 +22,15 @@
             <h2 id="tituloForm">📦 Novo Recebimento</h2>
             <form id="formRecebimento">
                 <input type="hidden" id="editId">
-                <div style="margin-bottom: 15px;">
-                    <button type="button" onclick="iniciarLeitor()" class="btn-secundario" style="width: 100%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px;">
-                        📷 Ler Código de Barras / QR
-                    </button>
-                    <div id="reader" style="width: 100%; display: none; margin-top: 10px; border-radius: 8px; overflow: hidden; border: 2px solid #15803d;"></div>
-                </div>
                 
-                <div class="campo-grupo">
-    <button type="button" onclick="iniciarLeitor()" style="background: #1e293b; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%;">
-        📷 Ler Código de Barras / QR
-    </button>
-</div>
+                <div style="margin-bottom: 15px;">
+                    <button type="button" onclick="iniciarLeitor()" class="btn-secundario" style="width: 100%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; font-weight: bold;">
+                        📷 Abrir Câmera (Barcode/QR)
+                    </button>
+                    <div id="reader" style="width: 100%; display: none; margin-top: 10px; border: 3px solid #15803d; border-radius: 8px; overflow: hidden;"></div>
+                    <button type="button" id="btnFecharCamera" onclick="pararLeitor()" style="display:none; width:100%; background:red; color:white; border:none; padding:5px; margin-top:5px; border-radius:5px; cursor:pointer;">Fechar Câmera</button>
+                </div>
 
-<div id="reader" style="width: 100%; max-width: 400px; margin: 10px auto; display: none; border-radius: 8px; overflow: hidden;"></div>
                 <div class="campo-grupo">
                     <input type="text" id="notaFiscal" required placeholder="Nota Fiscal">
                     <select id="torre" required>
@@ -42,54 +40,63 @@
                     </select>
                     <input type="text" id="sala" required placeholder="Sala/Apto">
                 </div>
+                
                 <div class="campo-grupo-duplo">
                     <input type="text" id="destinatario" required placeholder="Nome do Destinatário">
-                    <input type="tel" id="telefone" placeholder="Telefone (Auto-preenchimento)" readonly>
+                    <input type="tel" id="telefone" placeholder="Telefone (Automático)" readonly style="background-color: #f1f5f9;">
                 </div>
-                <p style="font-size: 0.8em; color: #666; margin-top: 5px;">💡 O telefone é preenchido automaticamente ao digitar a Sala.</p>
+
                 <div style="display: flex; gap: 10px;">
                     <button type="submit" id="btnSalvar" class="btn-principal">Salvar Mercadoria</button>
-                    <button type="button" id="btnCancelarEdit" class="btn-secundario" style="display:none; background:#666; color: white;" onclick="cancelarEdicao()">Cancelar</button>
+                    <button type="button" id="btnCancelarEdit" class="btn-secundario" style="display:none; background:#666; color: white;" onclick="cancelarEdicao()">Cancelar Edição</button>
                 </div>
             </form>
         </div>
 
         <div id="secaoFiltros" class="container">
-            <h3>🔍 Filtros e Busca</h3>
-            <div class="filtros-grid">
+            <h3>🔍 Filtros e Ferramentas</h3>
+            <div class="filtros-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                 <input type="date" id="filtroData" oninput="aplicarFiltros()">
-                <input type="text" id="filtroSala" placeholder="Filtrar Sala" oninput="aplicarFiltros()">
-                <input type="text" id="filtroNome" placeholder="Filtrar Nome" oninput="aplicarFiltros()">
-                <input type="text" id="filtroNF" placeholder="Filtrar NF" oninput="aplicarFiltros()">
+                <input type="text" id="filtroSala" placeholder="Sala" oninput="aplicarFiltros()">
+                <input type="text" id="filtroNome" placeholder="Nome" oninput="aplicarFiltros()">
                 <select id="filtroStatus" onchange="aplicarFiltros()">
                     <option value="">Status: Todos</option>
                     <option value="Aguardando retirada">Aguardando</option>
                     <option value="Retirado">Retirado</option>
                 </select>
             </div>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick="visualizarTudo()" class="btn-secundario" style="flex: 1; background: #64748b; color: white;">🧹 Limpar Filtros</button>
-                <button onclick="exportarCSV()" class="btn-secundario" style="flex: 1; background: #0ea5e9; color: white;">📊 Exportar Excel</button>
+            
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button onclick="visualizarTudo()" class="btn-secundario" style="flex: 1; background: #64748b; color: white;">🧹 Limpar</button>
+                <button onclick="exportarCSV()" class="btn-secundario" style="flex: 1; background: #0ea5e9; color: white;">📊 Exportar</button>
+                
+                <button onclick="document.getElementById('inputImportar').click()" class="btn-secundario" style="flex: 1; background: #15803d; color: white; font-weight: bold;">📥 Importar Backup</button>
+                <input type="file" id="inputImportar" style="display: none;" accept=".csv" onchange="importarCSV(event)">
             </div>
         </div>
 
-        <div id="dashboard">
-            <div class="card"><h3>Total Hoje</h3><span id="dashTotal">0</span></div>
-            <div class="card aguardando"><h3>Aguardando</h3><span id="dashAguardando">0</span></div>
-            <div class="card retirados"><h3>Retirados</h3><span id="dashRetirados">0</span></div>
+        <div id="dashboard" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div class="card" style="flex:1; background:white; padding:10px; border-radius:8px; text-align:center; border-bottom: 4px solid #94a3b8;">
+                <small>Hoje</small><br><strong id="dashTotal">0</strong>
+            </div>
+            <div class="card" style="flex:1; background:white; padding:10px; border-radius:8px; text-align:center; border-bottom: 4px solid #f59e0b;">
+                <small>Aguardando</small><br><strong id="dashAguardando">0</strong>
+            </div>
+            <div class="card" style="flex:1; background:white; padding:10px; border-radius:8px; text-align:center; border-bottom: 4px solid #15803d;">
+                <small>Retirados</small><br><strong id="dashRetirados">0</strong>
+            </div>
         </div>
 
         <div class="container">
-            <h3>📋 Notas Cadastradas (Ordem: Data > Torre > Sala)</h3>
+            <h3>📋 Registros</h3>
             <div class="table-responsive">
-                <table>
+                <table id="tabelaEncomendas">
                     <thead>
                         <tr>
                             <th>Data</th>
                             <th>NF</th>
                             <th>Sala</th>
-                            <th>Torre</th>
-                            <th>Destinatário</th>
+                            <th>Nome</th>
                             <th>Status</th>
                             <th>Ações</th>
                         </tr>
@@ -102,32 +109,31 @@
 
     <div class="lateral-acoes">
         <div id="resultadoBusca" class="container">
-            <h3>📌 Detalhes da Seleção</h3>
+            <h3>📌 Detalhes</h3>
             <div id="resultadoConteudo">
-                <p class="placeholder-text">Clique em uma linha da tabela ou use os filtros.</p>
+                <p style="color: #64748b; font-style: italic;">Selecione uma entrega na lista.</p>
             </div>
         </div>
 
         <div id="blocoConfirmarRetirada" class="container" style="display:none;">
-            <h3 style="color: #15803d; margin-top:0">✅ Confirmar Entrega</h3>
-            <label>Nome de quem está retirando:</label>
-            <input type="text" id="nomeRec" placeholder="Ex: O próprio, Cônjuge, etc" style="width:100%; margin-bottom:10px; padding: 10px; box-sizing: border-box;">
-            
-            <label>Assinatura Digital:</label>
+            <h3 style="color: #15803d; margin-top:0">✅ Finalizar Entrega</h3>
+            <input type="text" id="nomeRec" placeholder="Nome de quem retirou" style="width:100%; margin-bottom:10px; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+            <label style="font-size: 12px; color: #666;">Assine abaixo:</label>
             <div style="border: 2px dashed #15803d; background: #fff; margin: 10px 0; border-radius: 8px;">
-                <canvas id="canvasAssinatura" width="340" height="150" style="width:100%; cursor: crosshair;"></canvas>
+                <canvas id="canvasAssinatura" width="340" height="150" style="width:100%; cursor: crosshair; touch-action: none;"></canvas>
             </div>
-            
             <div style="display: flex; gap: 5px;">
-                <button onclick="limparAssinatura()" class="btn-secundario" style="flex: 1; background: #ef4444; color: white;">Limpar</button>
-                <button onclick="finalizarEntrega()" class="btn-principal" style="flex: 2; background: #15803d;">Finalizar e Avisar</button>
+                <button onclick="limparAssinatura()" class="btn-secundario" style="flex: 1; background: #ef4444; color: white;">Apagar</button>
+                <button onclick="finalizarEntrega()" class="btn-principal" style="flex: 2;">Confirmar</button>
             </div>
         </div>
     </div>
 </main>
 
-<script src="script.js"></script>
-<button id="btnTopo" onclick="voltarAoTopo()" title="Voltar ao topo">⬆️</button>
-</body>
+<button id="btnTopo" onclick="voltarAoTopo()" style="display:none; position:fixed; bottom:20px; right:20px; z-index:99; background:#15803d; color:white; border:none; width:50px; height:50px; border-radius:50%; font-size:20px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">⬆️</button>
+
 <script src="https://unpkg.com/html5-qrcode"></script>
+<script src="script.js"></script>
+
+</body>
 </html>
