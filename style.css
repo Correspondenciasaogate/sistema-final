@@ -1,0 +1,199 @@
+/* ================= CONFIGURAÇÕES GERAIS ================= */
+:root {
+    /* Tons de Verde Gate */
+    --primary-green: #15803d; /* Verde Floresta */
+    --light-green: #dcfce7;   /* Verde bem clarinho para fundos */
+    --accent-gold: #f59e0b;   /* Dourado para alertas */
+    --text-dark: #064e3b;     /* Texto verde bem escuro */
+    --bg-gray: #f0fdf4;       /* Fundo da tela levemente esverdeado */
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-gray);
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: var(--primary-green) !important;
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border-bottom: 4px solid #166534; /* Um verde mais escuro para detalhe */
+}
+
+/* ================= LAYOUT EM COLUNAS ================= */
+main {
+    display: grid;
+    grid-template-columns: 1fr 380px; /* Esquerda larga, direita fixa */
+    gap: 20px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Responsividade para telas pequenas */
+@media (max-width: 1000px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+    .lateral-acoes {
+        position: static;
+    }
+}
+
+/* ================= CONTAINERS E BLOCOS ================= */
+.container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+h2, h3 {
+    margin-top: 0;
+    color: var(--primary-green);
+    border-bottom: 2px solid var(--light-green);
+    padding-bottom: 10px;
+}
+
+/* ================= FORMULÁRIOS ================= */
+.campo-grupo, .campo-grupo-duplo {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+input, select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary-green);
+}
+
+#notaFiscal { flex: 1; }
+#torre { width: 100px; }
+#sala { width: 100px; }
+#destinatario { flex: 2; }
+#telefone { flex: 1; background-color: #f1f5f9; cursor: not-allowed; }
+
+/* Botões */
+/* Botão principal forçado para Verde */
+.btn-principal {
+    background-color: var(--primary-green) !important;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    flex: 1;
+}
+
+.btn-principal:hover {
+    background-color: #166534 !important;
+}
+
+/* Destaque da linha da tabela ao passar o mouse */
+tr:hover {
+    background-color: #bbf7d0 !important; /* Verde claro ao selecionar */
+}
+
+.btn-secundario {
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* ================= DASHBOARD ================= */
+#dashboard {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.card {
+    flex: 1;
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border-bottom: 4px solid #94a3b8;
+}
+
+.card h3 { border: none; font-size: 14px; color: #64748b; margin-bottom: 5px; }
+.card span { font-size: 24px; font-weight: bold; }
+
+.card.aguardando { border-color: var(--accent-gold); color: var(--accent-gold); }
+.card.retirados { border-color: var(--primary-green); color: var(--primary-green); }
+
+/* ================= FILTROS ================= */
+.filtros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+/* ================= TABELA ================= */
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th {
+    background-color: #f8fafc;
+    text-align: left;
+    padding: 12px;
+    font-size: 13px;
+    color: #64748b;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+}
+
+tr:hover {
+    background-color: #f0fdf4; /* Verde bem clarinho no hover */
+    cursor: pointer;
+}
+
+/* ================= COLUNA LATERAL (FIXA AO ROLAR) ================= */
+.lateral-acoes {
+    position: sticky;
+    top: 20px;
+    align-self: start;
+}
+
+.placeholder-text {
+    color: #94a3b8;
+    text-align: center;
+    padding: 40px 0;
+    font-style: italic;
+}
+
+#canvasAssinatura {
+    touch-action: none;
+}
