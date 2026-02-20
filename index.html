@@ -19,6 +19,20 @@
             <h2 id="tituloForm">📦 Novo Recebimento</h2>
             <form id="formRecebimento">
                 <input type="hidden" id="editId">
+                <div style="margin-bottom: 15px;">
+                    <button type="button" onclick="iniciarLeitor()" class="btn-secundario" style="width: 100%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px;">
+                        📷 Ler Código de Barras / QR
+                    </button>
+                    <div id="reader" style="width: 100%; display: none; margin-top: 10px; border-radius: 8px; overflow: hidden; border: 2px solid #15803d;"></div>
+                </div>
+                
+                <div class="campo-grupo">
+    <button type="button" onclick="iniciarLeitor()" style="background: #1e293b; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%;">
+        📷 Ler Código de Barras / QR
+    </button>
+</div>
+
+<div id="reader" style="width: 100%; max-width: 400px; margin: 10px auto; display: none; border-radius: 8px; overflow: hidden;"></div>
                 <div class="campo-grupo">
                     <input type="text" id="notaFiscal" required placeholder="Nota Fiscal">
                     <select id="torre" required>
@@ -115,4 +129,5 @@
 <script src="script.js"></script>
 <button id="btnTopo" onclick="voltarAoTopo()" title="Voltar ao topo">⬆️</button>
 </body>
+<script src="https://unpkg.com/html5-qrcode"></script>
 </html>
