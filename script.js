@@ -8,11 +8,10 @@ const CONFIG = {
 let encomendas = JSON.parse(localStorage.getItem(CONFIG.ID_CLIENTE)) || [];
 let selecionadaId = null;
 let canvas, ctx, desenhando = false;
-let html5QrCode; // Variável da câmera adicionada
 
-// ================= AGENDA DE MORADORES (MANTIDA INTEGRALMENTE) =================
+// ================= AGENDA DE MORADORES (SUA LISTA ORIGINAL) =================
 const agendaMoradores = {
-    "Gate002": "11994392466", "Gate004": "11958649090", "Gate007": "11958649090", "Gate101": "11979861261",
+    "Gate002": "1194392466", "Gate004": "11958649090", "Gate007": "11958649090", "Gate101": "11979861261",
     "Gate102": "11915568088", "Gate103": "11915568088", "Gate104": "11971556999", "Gate105": "11971556999",
     "Gate106": "11988132624", "Gate107": "11969715269", "Gate121": "11969715269", "Gate123": "11993498721",
     "Gate124": "11914217088", "Gate125": "11914217088", "Gate126": "11940057497", "Gate202": "11955303530",
@@ -92,8 +91,7 @@ const agendaMoradores = {
     "Way905": "11941384840", "Way906": "11996019671", "Way907": "11996019671", "Way908": "11985006930",
     "Way1001": "11993905617", "Way1002": "11999083190", "Way1005": "1135938483", "Way1006": "1135938483", "Way1010": "11940037132",
     "Way1101": "11958113536", "Way1102": "11958113536", "Way1103": "11958113536",
-    "Way1104": "11997073515", "Way1105": "11997073515", "Way1106": "11997073515",
-    "Way1107": "11997073515", "Way1108": "11958113536","Way1110": "11958113536", "Way1201": "11979569039", "Way1202": "11993936531",
+    "Way1104": "11997073515", "Way1105": "11997073515", "Way1106": "11997073515", "Way1107": "11997073515", "Way1108": "11958113536","Way1110": "11958113536", "Way1201": "11979569039", "Way1202": "11993936531",
     "Way1205": "11983077846", "Way1206": "11988971195", "Way1208": "11933931917", "Way1302": "11989555962",
     "Way1303": "11975153885", "Way1306": "1142294029", "Way1307": "11937469366", "Way1310": "11953632530",
     "Way1401": "11942999009", "Way1403": "11941928289", "Way1404": "11994783019", "Way1405": "11963315000",
@@ -139,28 +137,21 @@ function atualizarDashboard() {
     const tHoje = encomendas.filter(e => e.data === hoje).length;
     const tAguardando = encomendas.filter(e => e.status === 'Aguardando retirada').length;
     const tRetirados = encomendas.filter(e => e.status === 'Retirado').length;
+    
     document.getElementById('dashTotal').innerText = tHoje;
     document.getElementById('dashAguardando').innerText = tAguardando;
     document.getElementById('dashRetirados').innerText = tRetirados;
 }
 
-// ================= WHATSAPP COM SAUDAÇÃO =================
+// ================= WHATSAPP =================
 function enviarZap(item, tipo) {
     if (!item.telefone) return;
     const tel = item.telefone.replace(/\D/g, '');
-    
-    // Lógica de saudação por horário
-    const horaAgora = new Date().getHours();
-    let saudacao = "Olá";
-    if (horaAgora >= 5 && horaAgora < 12) saudacao = "Bom dia";
-    else if (horaAgora >= 12 && horaAgora < 18) saudacao = "Boa tarde";
-    else saudacao = "Boa noite";
-
     let msg = "";
     if (tipo === 'chegada') {
-        msg = `${saudacao}, *${item.destinatario}*! 📦\nSua encomenda (NF: *${item.nf}*) chegou no -1 setor de Encomendas.\n*Sala ${item.sala}* (${item.torre}).`;
+        msg = `Olá, *${item.destinatario}*! 📦\nSua encomenda (NF: *${item.nf}*) chegou no -1 setor de Encomendas.\n*Sala ${item.sala}* (${item.torre}).`;
     } else {
-        msg = `✅ *Confirmação de Retirada*\n${saudacao}, *${item.destinatario}*!\nSua encomenda (NF: *${item.nf}*) foi retirada por *${item.quemRetirou}* em ${item.dataRetirada}.`;
+        msg = `✅ *Confirmação de Retirada*\nOlá, *${item.destinatario}*!\nSua encomenda (NF: *${item.nf}*) foi retirada por *${item.quemRetirou}* em ${item.dataRetirada}.`;
     }
     window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
 }
@@ -209,6 +200,7 @@ function editar(id) {
     document.getElementById('sala').value = item.sala;
     document.getElementById('destinatario').value = item.destinatario;
     document.getElementById('telefone').value = item.telefone;
+    
     document.getElementById('tituloForm').innerText = "✏️ Editar Encomenda";
     document.getElementById('btnSalvar').innerText = "Atualizar Encomenda";
     document.getElementById('btnCancelarEdit').style.display = "block";
@@ -223,7 +215,7 @@ function cancelarEdicao() {
     document.getElementById('btnCancelarEdit').style.display = "none";
 }
 
-// ================= FILTROS E TABELA (MANTIDOS) =================
+// ================= FILTROS E TABELA =================
 function aplicarFiltros() {
     const fData = document.getElementById('filtroData').value; 
     const fSala = document.getElementById('filtroSala').value.toLowerCase();
@@ -233,11 +225,12 @@ function aplicarFiltros() {
 
     const filtrados = encomendas.filter(e => {
         const dataFormatada = e.data.split('/').reverse().join('-');
-        return (fData === "" || dataFormatada === fData) &&
-               (fSala === "" || e.sala.toLowerCase().includes(fSala)) &&
-               (fNome === "" || e.destinatario.toLowerCase().includes(fNome)) &&
-               (fNF === "" || e.nf.toLowerCase().includes(fNF)) &&
-               (fStatus === "" || e.status === fStatus);
+        const matchData = (fData === "" || dataFormatada === fData);
+        const matchSala = (fSala === "" || e.sala.toLowerCase().includes(fSala));
+        const matchNome = (fNome === "" || e.destinatario.toLowerCase().includes(fNome));
+        const matchNF = (fNF === "" || e.nf.toLowerCase().includes(fNF));
+        const matchStatus = (fStatus === "" || e.status === fStatus);
+        return matchData && matchSala && matchNome && matchNF && matchStatus;
     });
     
     renderizarTabela(filtrados);
@@ -343,6 +336,7 @@ function finalizarEntrega() {
     
     const index = encomendas.findIndex(e => e.id === selecionadaId);
     
+    // Captura a assinatura com fundo branco
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
@@ -361,42 +355,6 @@ function finalizarEntrega() {
     document.getElementById('nomeRec').value = "";
     document.getElementById('blocoConfirmarRetirada').style.display = 'none';
     selecionarUnica(selecionadaId);
-}
-
-// ================= CÂMERA (HTML5-QRCODE) =================
-function iniciarLeitor() {
-    const readerDiv = document.getElementById('reader');
-    readerDiv.style.display = 'block';
-
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => começarScan()).catch(() => começarScan());
-    } else {
-        começarScan();
-    }
-}
-
-function começarScan() {
-    html5QrCode = new Html5Qrcode("reader");
-    html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 150 } },
-        (decodedText) => {
-            document.getElementById('notaFiscal').value = decodedText;
-            pararLeitor();
-            navigator.vibrate(100); 
-        }
-    ).catch(err => {
-        console.error(err);
-        alert("Erro ao abrir câmera. Verifique as permissões.");
-    });
-}
-
-function pararLeitor() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            document.getElementById('reader').style.display = 'none';
-        });
-    }
 }
 
 // ================= DEMAIS FUNÇÕES =================
