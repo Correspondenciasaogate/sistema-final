@@ -3,137 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Encomendas - Gate & Way</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Sistema Gate - Oficial</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        /* CSS BÁSICO PARA FUNCIONAMENTO */
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+        button { cursor: pointer; font-weight: bold; border: none; }
+        .btn-principal { background: #15803d; color: white; }
+        .btn-camera { background: #1e293b; color: white; }
+        .btn-importar { background: #0ea5e9; color: white; }
+        #reader { width: 100%; border-radius: 8px; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
+        th { background: #f8f9fa; }
+        .status-aguardando { color: #f59e0b; font-weight: bold; }
+        .status-retirado { color: #15803d; }
+    </style>
 </head>
 <body>
 
-<header>
-    <h1>Controle de Encomendas</h1>
-</header>
+<div class="container">
+    <h2>📦 Novo Recebimento</h2>
+    
+    <button type="button" class="btn-camera" onclick="iniciarLeitor()">📷 Abrir Câmera (QR/Barra)</button>
+    <div id="reader" style="display:none"></div>
+    <button id="btnFecharCam" style="display:none; background:red; color:white;" onclick="pararLeitor()">Fechar Câmera</button>
 
-<main>
-    <div class="coluna-dados">
+    <form id="formEncomenda">
+        <input type="text" id="notaFiscal" placeholder="Nota Fiscal" required>
         
-        <div id="blocoRecebimento" class="container">
-            <h2 id="tituloForm">📦 Novo Recebimento</h2>
-            <form id="formRecebimento">
-                <input type="hidden" id="editId">
-                
-                <div style="margin-bottom: 15px;">
-                    <button type="button" onclick="iniciarLeitor()" class="btn-secundario" style="width: 100%; background: #1e293b; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; font-weight: bold;">
-                        📷 Abrir Câmera (Barcode/QR)
-                    </button>
-                    <div id="reader" style="width: 100%; display: none; margin-top: 10px; border: 3px solid #15803d; border-radius: 8px; overflow: hidden;"></div>
-                    <button type="button" id="btnFecharCamera" onclick="pararLeitor()" style="display:none; width:100%; background:red; color:white; border:none; padding:5px; margin-top:5px; border-radius:5px; cursor:pointer;">Fechar Câmera</button>
-                </div>
-
-                <div class="campo-grupo">
-                    <input type="text" id="notaFiscal" required placeholder="Nota Fiscal">
-                    <select id="torre" required>
-                        <option value="">Torre</option>
-                        <option value="Gate">Gate</option>
-                        <option value="Way">Way</option>
-                    </select>
-                    <input type="text" id="sala" required placeholder="Sala/Apto">
-                </div>
-                
-                <div class="campo-grupo-duplo">
-                    <input type="text" id="destinatario" required placeholder="Nome do Destinatário">
-                    <input type="tel" id="telefone" placeholder="Telefone (Automático)" readonly style="background-color: #f1f5f9;">
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <button type="submit" id="btnSalvar" class="btn-principal">Salvar Mercadoria</button>
-                    <button type="button" id="btnCancelarEdit" class="btn-secundario" style="display:none; background:#666; color: white;" onclick="cancelarEdicao()">Cancelar Edição</button>
-                </div>
-            </form>
+        <div style="display: flex; gap: 5px;">
+            <select id="torre" style="flex: 1;" required onchange="buscarContato()">
+                <option value="">Torre</option>
+                <option value="Gate">Gate</option>
+                <option value="Way">Way</option>
+            </select>
+            <input type="text" id="sala" placeholder="Sala" style="flex: 1;" required oninput="buscarContato()">
         </div>
 
-        <div id="secaoFiltros" class="container">
-            <h3>🔍 Filtros e Ferramentas</h3>
-            <div class="filtros-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                <input type="date" id="filtroData" oninput="aplicarFiltros()">
-                <input type="text" id="filtroSala" placeholder="Sala" oninput="aplicarFiltros()">
-                <input type="text" id="filtroNome" placeholder="Nome" oninput="aplicarFiltros()">
-                <select id="filtroStatus" onchange="aplicarFiltros()">
-                    <option value="">Status: Todos</option>
-                    <option value="Aguardando retirada">Aguardando</option>
-                    <option value="Retirado">Retirado</option>
-                </select>
-            </div>
-            
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button onclick="visualizarTudo()" class="btn-secundario" style="flex: 1; background: #64748b; color: white;">🧹 Limpar</button>
-                <button onclick="exportarCSV()" class="btn-secundario" style="flex: 1; background: #0ea5e9; color: white;">📊 Exportar</button>
-                
-                <button onclick="document.getElementById('inputImportar').click()" class="btn-secundario" style="flex: 1; background: #15803d; color: white; font-weight: bold;">📥 Importar Backup</button>
-                <input type="file" id="inputImportar" style="display: none;" accept=".csv" onchange="importarCSV(event)">
-            </div>
-        </div>
+        <input type="text" id="destinatario" placeholder="Nome do Destinatário" required>
+        <input type="text" id="telefone" placeholder="Telefone (Automático)" readonly style="background:#e2e8f0">
 
-        <div id="dashboard" style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <div class="card" style="flex:1; background:white; padding:10px; border-radius:8px; text-align:center; border-bottom: 4px solid #94a3b8;">
-                <small>Hoje</small><br><strong id="dashTotal">0</strong>
-            </div>
-            <div class="card" style="flex:1; background:white; padding:10px; border-radius:8px; text-align:center; border-bottom: 4px solid #f59e0b;">
-                <small>Aguardando</small><br><strong id="dashAguardando">0</strong>
-            </div>
-            <div class="card" style="flex:1; background:white; padding:10px; border-radius:8px; text-align:center; border-bottom: 4px solid #15803d;">
-                <small>Retirados</small><br><strong id="dashRetirados">0</strong>
-            </div>
-        </div>
+        <button type="submit" class="btn-principal">Salvar Mercadoria</button>
+    </form>
+</div>
 
-        <div class="container">
-            <h3>📋 Registros</h3>
-            <div class="table-responsive">
-                <table id="tabelaEncomendas">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>NF</th>
-                            <th>Sala</th>
-                            <th>Nome</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="listaCorpo"></tbody>
-                </table>
-            </div>
-        </div>
+<div class="container">
+    <h3>🔍 Ferramentas</h3>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-importar" onclick="document.getElementById('inputArquivo').click()">📥 Importar Backup</button>
+        <input type="file" id="inputArquivo" style="display:none" accept=".csv" onchange="importarCSV(event)">
+        <button style="background:#64748b; color:white;" onclick="exportarCSV()">📊 Exportar</button>
     </div>
+</div>
 
-    <div class="lateral-acoes">
-        <div id="resultadoBusca" class="container">
-            <h3>📌 Detalhes</h3>
-            <div id="resultadoConteudo">
-                <p style="color: #64748b; font-style: italic;">Selecione uma entrega na lista.</p>
-            </div>
-        </div>
+<div class="container" style="overflow-x: auto;">
+    <h3>📋 Registros</h3>
+    <table id="tabela">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>NF</th>
+                <th>Sala</th>
+                <th>Nome</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="lista"></tbody>
+    </table>
+</div>
 
-        <div id="blocoConfirmarRetirada" class="container" style="display:none;">
-            <h3 style="color: #15803d; margin-top:0">✅ Finalizar Entrega</h3>
-            <input type="text" id="nomeRec" placeholder="Nome de quem retirou" style="width:100%; margin-bottom:10px; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
-            <label style="font-size: 12px; color: #666;">Assine abaixo:</label>
-            <div style="border: 2px dashed #15803d; background: #fff; margin: 10px 0; border-radius: 8px;">
-                <canvas id="canvasAssinatura" width="340" height="150" style="width:100%; cursor: crosshair; touch-action: none;"></canvas>
-            </div>
-            <div style="display: flex; gap: 5px;">
-                <button onclick="limparAssinatura()" class="btn-secundario" style="flex: 1; background: #ef4444; color: white;">Apagar</button>
-                <button onclick="finalizarEntrega()" class="btn-principal" style="flex: 2;">Confirmar</button>
-            </div>
-        </div>
-    </div>
-</main>
+<script>
+    // --- COLE SUA LISTA DE MORADORES AQUI ---
+    const agendaMoradores = {
+        "Gate101": "11999999999",
+        "Gate102": "11888888888",
+        "Way101": "11777777777",
+        // ... continue colando sua lista aqui
+    };
 
-<button id="btnTopo" onclick="voltarAoTopo()" style="display:none; position:fixed; bottom:20px; right:20px; z-index:99; background:#15803d; color:white; border:none; width:50px; height:50px; border-radius:50%; font-size:20px; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">⬆️</button>
+    let encomendas = JSON.parse(localStorage.getItem('banco_gate')) || [];
+    let html5QrCode;
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script src="script.js"></script>
+    // FUNÇÃO QUE PUXA O TELEFONE (IGUAL ANTES)
+    function buscarContato() {
+        const torre = document.getElementById('torre').value;
+        const sala = document.getElementById('sala').value.trim();
+        const campoTel = document.getElementById('telefone');
+        const chave = torre + sala;
+
+        if (agendaMoradores[chave]) {
+            campoTel.value = agendaMoradores[chave];
+            campoTel.style.background = "#dcfce7";
+        } else {
+            campoTel.value = "";
+            campoTel.style.background = "#e2e8f0";
+        }
+    }
+
+    // FUNÇÃO DA CÂMERA
+    function iniciarLeitor() {
+        document.getElementById('reader').style.display = 'block';
+        document.getElementById('btnFecharCam').style.display = 'block';
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            (text) => {
+                document.getElementById('notaFiscal').value = text;
+                pararLeitor();
+            }
+        ).catch(err => alert("Erro na câmera. Verifique a permissão."));
+    }
+
+    function pararLeitor() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                document.getElementById('reader').style.display = 'none';
+                document.getElementById('btnFecharCam').style.display = 'none';
+            });
+        }
+    }
+
+    // SALVAR
+    document.getElementById('formEncomenda').onsubmit = (e) => {
+        e.preventDefault();
+        const nova = {
+            data: new Date().toLocaleDateString('pt-BR'),
+            nf: document.getElementById('notaFiscal').value,
+            torre: document.getElementById('torre').value,
+            sala: document.getElementById('sala').value,
+            nome: document.getElementById('destinatario').value,
+            status: 'Aguardando retirada'
+        };
+        encomendas.push(nova);
+        localStorage.setItem('banco_gate', JSON.stringify(encomendas));
+        e.target.reset();
+        buscarContato();
+        render();
+    };
+
+    function render() {
+        const lista = document.getElementById('lista');
+        lista.innerHTML = encomendas.map(enc => `
+            <tr>
+                <td>${enc.data}</td>
+                <td>${enc.nf}</td>
+                <td>${enc.torre} ${enc.sala}</td>
+                <td>${enc.nome}</td>
+                <td class="${enc.status === 'Retirado' ? 'status-retirado' : 'status-aguardando'}">${enc.status}</td>
+            </tr>
+        `).reverse().join('');
+    }
+
+    // IMPORTAR BACKUP (PARA RECUPERAR O QUE VOCÊ EXPORTOU)
+    function importarCSV(event) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const linhas = e.target.result.split('\n');
+            for (let i = 1; i < linhas.length; i++) {
+                const col = linhas[i].split(';');
+                if (col.length >= 4) {
+                    encomendas.push({
+                        data: col[0], nf: col[1], torre: col[2], sala: col[3], nome: col[4], status: col[5] || 'Aguardando retirada'
+                    });
+                }
+            }
+            localStorage.setItem('banco_gate', JSON.stringify(encomendas));
+            render();
+            alert("Dados recuperados!");
+        };
+        reader.readAsText(event.target.files[0]);
+    }
+
+    function exportarCSV() {
+        let csv = "\ufeffData;NF;Torre;Sala;Nome;Status\n";
+        encomendas.forEach(e => {
+            csv += `${e.data};${e.nf};${e.torre};${e.sala};${e.nome};${e.status}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "encomendas_gate.csv";
+        link.click();
+    }
+
+    render();
+</script>
 
 </body>
 </html>
