@@ -3,82 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Encomendas - Gate & Way</title>
+    <title>Controle de Mercadorias Pro</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
 
 <header>
-    <h1>Controle de Encomendas - Gate & Way</h1>
+    <h1>Controle de Encomendas</h1>
 </header>
 
 <main>
-    <div class="container">
-        <h2>📦 Novo Recebimento</h2>
+    <div class="coluna-dados">
         
-        <div style="margin-bottom: 15px;">
-            <button type="button" onclick="iniciarLeitor()" style="background: #1e293b; color: white; padding: 12px; border: none; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold;">
-                📷 Ler Código de Barras / QR
-            </button>
-            <div id="reader" style="width: 100%; display: none; margin-top: 10px; border: 2px solid #15803d; border-radius: 8px; overflow: hidden;"></div>
-            <button id="btnFecharCam" style="display:none; background:red; color:white; width:100%; margin-top:5px; border:none; padding:5px; border-radius:5px;" onclick="pararLeitor()">Fechar Câmera</button>
+        <div id="blocoRecebimento" class="container">
+            <h2 id="tituloForm">📦 Novo Recebimento</h2>
+            <form id="formRecebimento">
+                <input type="hidden" id="editId">
+                <div class="campo-grupo">
+                    <input type="text" id="notaFiscal" required placeholder="Nota Fiscal">
+                    <select id="torre" required>
+                        <option value="">Torre</option>
+                        <option value="Gate">Gate</option>
+                        <option value="Way">Way</option>
+                    </select>
+                    <input type="text" id="sala" required placeholder="Sala/Apto">
+                </div>
+                <div class="campo-grupo">
+                    <input type="text" id="destinatario" required placeholder="Nome do Destinatário">
+                    <input type="tel" id="telefone" placeholder="Telefone (Opcional)">
+                </div>
+                <p style="font-size: 0.8em; color: #666; margin-top: 5px;">💡 A foto deve ser enviada diretamente pelo WhatsApp.</p>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" id="btnSalvar" class="btn-principal">Salvar Mercadoria</button>
+                    <button type="button" id="btnCancelarEdit" class="btn-secundario" style="display:none; background:#666;" onclick="cancelarEdicao()">Cancelar</button>
+                </div>
+            </form>
         </div>
 
-        <form id="formEncomenda">
-            <input type="text" id="notaFiscal" placeholder="Nota Fiscal" required>
-            
-            <div style="display: flex; gap: 10px; margin: 10px 0;">
-                <select id="torre" required onchange="buscarContato()">
-                    <option value="">Torre</option>
-                    <option value="Gate">Gate</option>
-                    <option value="Way">Way</option>
+        <div id="secaoFiltros" class="container">
+            <h3>🔍 Filtros e Busca</h3>
+            <div class="filtros-grid">
+                <input type="date" id="filtroData" oninput="aplicarFiltros()">
+                <input type="text" id="filtroSala" placeholder="Sala" oninput="aplicarFiltros()">
+                <input type="text" id="filtroNome" placeholder="Nome" oninput="aplicarFiltros()">
+                <input type="text" id="filtroNF" placeholder="NF" oninput="aplicarFiltros()">
+                <select id="filtroStatus" onchange="aplicarFiltros()">
+                    <option value="">Status: Todos</option>
+                    <option value="Aguardando retirada">Aguardando</option>
+                    <option value="Retirado">Retirado</option>
                 </select>
-                <input type="text" id="sala" placeholder="Sala" required oninput="buscarContato()">
             </div>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="visualizarTudo()" class="btn-secundario" style="flex: 1; background: #64748b; color: white;">🧹 Limpar Filtros</button>
+                <button onclick="exportarCSV()" class="btn-secundario" style="flex: 1; background: #0ea5e9; color: white;">📊 Exportar Excel</button>
+            </div>
+        </div>
 
-            <input type="text" id="destinatario" placeholder="Nome do Destinatário" required>
-            <input type="text" id="telefone" placeholder="Telefone (Automático)" readonly style="background:#f1f5f9; margin-bottom: 15px;">
+        <div id="dashboard">
+            <div class="card"><h3>Total Hoje</h3><span id="dashTotal">0</span></div>
+            <div class="card aguardando"><h3>Aguardando</h3><span id="dashAguardando">0</span></div>
+            <div class="card retirados"><h3>Retirados</h3><span id="dashRetirados">0</span></div>
+        </div>
 
-            <button type="submit" style="background: #15803d; color: white; padding: 15px; border: none; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer;">
-                Salvar e Avisar no WhatsApp
-            </button>
-        </form>
-    </div>
-
-    <div class="container">
-        <h3>⚙️ Ferramentas e Backup</h3>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="document.getElementById('inputImportar').click()" style="background: #0ea5e9; color: white; padding: 10px; border: none; border-radius: 8px; flex: 1; cursor: pointer;">
-                📥 Importar Backup
-            </button>
-            <input type="file" id="inputImportar" style="display: none;" accept=".csv" onchange="importarCSV(event)">
-            
-            <button onclick="exportarCSV()" style="background: #64748b; color: white; padding: 10px; border: none; border-radius: 8px; flex: 1; cursor: pointer;">
-                📊 Exportar CSV
-            </button>
+        <div class="container">
+            <h3>📋 Notas Cadastradas</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th><th>NF</th><th>Sala</th><th>Torre</th><th>Destinatário</th><th>Status</th><th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaCorpo"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div class="container" style="overflow-x: auto;">
-        <h3>📋 Registros</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>NF</th>
-                    <th>Local</th>
-                    <th>Nome</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="listaCorpo"></tbody>
-        </table>
+    <div class="lateral-acoes">
+        <div id="resultadoBusca" class="container">
+            <h3>📌 Detalhes da Seleção</h3>
+            <div id="resultadoConteudo">
+                <p class="placeholder-text">Clique em uma nota ou use os filtros.</p>
+            </div>
+        </div>
+
+        <div id="blocoConfirmarRetirada" class="container" style="display:none;">
+            <h3 style="color:green; margin-top:0">✅ Confirmar Entrega</h3>
+            <input type="text" id="nomeRec" placeholder="Nome de quem retira" style="width:100%; margin-bottom:10px;">
+            <label>Assinatura Digital:</label>
+            <div style="border: 1px dashed #ccc; background: #fff; margin: 10px 0;">
+                <canvas id="canvasAssinatura" width="340" height="150" style="width:100%;"></canvas>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="limparAssinatura()" class="btn-secundario" style="flex: 1;">Limpar</button>
+                <button onclick="finalizarEntrega()" class="btn-principal" style="flex: 2; background: green;">Finalizar</button>
+            </div>
+        </div>
     </div>
 </main>
-
-<button id="btnTopo" onclick="window.scrollTo({top:0, behavior:'smooth'})" style="display:none; position:fixed; bottom:20px; right:20px; background:#15803d; color:white; border:none; width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:20px;">⬆️</button>
-
 <script src="script.js"></script>
 </body>
+
 </html>
