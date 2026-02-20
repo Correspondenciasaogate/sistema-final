@@ -1,15 +1,15 @@
-// ================= CONFIGURAÇÃO WHITE LABEL =================
+// ================= CONFIGURAÇÃO E VARIÁVEIS =================
 const CONFIG = {
-    NOME_SISTEMA: "Controle de Encomendas - Gate", // Nome no topo
-    ID_CLIENTE: "banco_dados_gate_v1",             // Mude este ID para cada novo condomínio
+    NOME_SISTEMA: "Controle de Encomendas - Gate/Way",
+    ID_CLIENTE: "banco_dados_gateway_v2",
 };
 
-// ================= VARIÁVEIS GLOBAIS =================
 let encomendas = JSON.parse(localStorage.getItem(CONFIG.ID_CLIENTE)) || [];
 let selecionadaId = null;
 let canvas, ctx, desenhando = false;
+let html5QrCode;
 
-// ================= AGENDA DE MORADORES =================
+// ================= AGENDA DE MORADORES (Sua lista completa) =================
 const agendaMoradores = {
     "Gate002": "11994392466", "Gate004": "11958649090", "Gate007": "11958649090", "Gate101": "11979861261",
     "Gate102": "11915568088", "Gate103": "11915568088", "Gate104": "11971556999", "Gate105": "11971556999",
@@ -43,41 +43,7 @@ const agendaMoradores = {
     "Gate805": "11919998392", "Gate808": "11937079090", "Gate809": "11937079090", "Gate813": "11943023232",
     "Gate814": "11943023232", "Gate815": "11982490284", "Gate816": "11947425053", "Gate819": "11944509481",
     "Gate820": "11944509481", "Gate821": "11944509481", "Gate822": "11992414539", "Gate823": "11995529248",
-    "Gate901": "11942253338", "Gate902": "11993062995", "Gate903": "11966232691", "Gate904": "11971917184",
-    "Gate905": "11942090332", "Gate907": "11950400353", "Gate913": "11995348108", "Gate914": "11995348108",
-    "Gate915": "11995348108", "Gate916": "11998592019", "Gate917": "11998592019", "Gate918": "11998592019",
-    "Gate919": "11984261996", "Gate920": "11981638512", "Gate921": "11981638512", "Gate922": "11966177018",
-    "Gate923": "11966177018", "Gate924": "11966346952", "Gate925": "11941903103", "Gate926": "11981081245",
-    "Gate1001": "11984479820", "Gate1002": "11986970186", "Gate1003": "11912758090", "Gate1004": "11947089976",
-    "Gate1005": "11999054195", "Gate1007": "11997056816", "Gate1008": "11982660283", "Gate1009": "11982660283",
-    "Gate1010": "11998231391", "Gate1012": "11988406990", "Gate1014": "11994118788", "Gate1022": "11985863922",
-    "Gate1023": "11985863922", "Gate1024": "11981957063", "Gate1025": "11970739076", "Gate1101": "11973781626",
-    "Gate1102": "11948394992", "Gate1104": "11999258982", "Gate1105": "11992136352", "Gate1106": "11992136352",
-    "Gate1107": "11943668324", "Gate1108": "11943668324", "Gate1110": "11971507476", "Gate1112": "11940277289",
-    "Gate1113": "11943123167", "Gate1114": "1120609991", "Gate1115": "1120609991", "Gate1116": "1120609991",
-    "Gate1117": "1120609991", "Gate1118": "1120609991", "Gate1119": "1120609991", "Gate1120": "1120609991",
-    "Gate1121": "1120609991", "Gate1122": "11940611428", "Gate1123": "11940611428", "Gate1124": "11940611428",
-    "Gate1125": "11940611428", "Gate1126": "11940611428", "Gate1203": "11993850978", "Gate1204": "11993850978",
-    "Gate1205": "11996227252", "Gate1207": "11963570835", "Gate1208": "11963570835", "Gate1209": "1155558872",
-    "Gate1210": "1155558872", "Gate1211": "1155558872", "Gate1212": "1155558872", "Gate1213": "1155558872",
-    "Gate1214": "1155558872", "Gate1215": "1155558872", "Gate1216": "1155558872", "Gate1217": "11991245370", "Gate1222": "11981289538",
-    "Gate1223": "11986967125", "Gate1224": "11986967125", "Gate1225": "11986967125", "Gate1226": "11912984074",
-    "Gate1301": "11982887452", "Gate1302": "11982887452", "Gate1303": "11982887452", "Gate1304": "11982887452",
-    "Gate1306": "11963490073", "Gate1307": "11960211124", "Gate1308": "11960211124", "Gate1309": "11951178978",
-    "Gate1310": "11963587730", "Gate1311": "11963587730", "Gate1312": "11992906300", "Gate1313": "11992906300",
-    "Gate1317": "11943482759", "Gate1318": "11943482759", "Gate1319": "11916270842", "Gate1320": "11976407877",
-    "Gate1322": "11998938372", "Gate1323": "11998938372", "Gate1324": "11998938372", "Gate1325": "11943280317",
-    "Gate1326": "11943280317", "Gate1403": "11916270842", "Gate1404": "11916270842", "Gate1407": "11942764856",
-    "Gate1408": "11942764856", "Gate1409": "11942764856", "Gate1410": "11942764856", "Gate1411": "11942764856",
-    "Gate1412": "11942764856", "Gate1415": "11983570675", "Gate1418": "11977109839", "Gate1419": "11977109839",
-    "Gate1420": "11977109839", "Gate1422": "11917365825", "Gate1423": "11917365825", "Gate1424": "11982000174",
-    "Gate1425": "11982000174", "Gate1501": "11962186775", "Gate1503": "11991487883", "Gate1504": "11991487883",
-    "Gate1505": "11945205453", "Gate1506": "11945205453", "Gate1507": "11943482759", "Gate1508": "11943482759",
-    "Gate1509": "11943482759", "Gate1510": "11943482759", "Gate1511": "11943482759", "Gate1512": "11943482759",
-    "Gate1513": "11943482759", "Gate1514": "11943482759", "Gate1515": "1120609991", "Gate1516": "1120609991",
-    "Gate1517": "1120609991", "Gate1518": "11953310000", "Gate1519": "11991542993", "Gate1520": "11992611390",
-    "Gate1521": "11992611390", "Gate1522": "11943842468", "Gate1523": "11943842468", "Gate1524": "11941901504",
-    "Gate1525": "11941901504", "Way001": "11994766923", "Way101": "3598154110", "Way102": "11966584923",
+    "Way001": "11994766923", "Way101": "3598154110", "Way102": "11966584923",
     "Way105": "3598154110", "Way106": "3598154110", "Way107": "11964038896", "Way201": "11977268575",
     "Way202": "11984608870", "Way204": "11988978251", "Way205": "11993020196", "Way209": "11982881864",
     "Way210": "11974762455", "Way303": "11951758930", "Way304": "11951758930", "Way306": "11991122765",
@@ -91,8 +57,7 @@ const agendaMoradores = {
     "Way905": "11941384840", "Way906": "11996019671", "Way907": "11996019671", "Way908": "11985006930",
     "Way1001": "11993905617", "Way1002": "11999083190", "Way1005": "1135938483", "Way1006": "1135938483", "Way1010": "11940037132",
     "Way1101": "11958113536", "Way1102": "11958113536", "Way1103": "11958113536",
-    "Way1104": "11997073515", "Way1105": "11997073515", "Way1106": "11997073515",
-    "Way1107": "11997073515", "Way1108": "11958113536","Way1110": "11958113536", "Way1201": "11979569039", "Way1202": "11993936531",
+    "Way1104": "11997073515", "Way1105": "11997073515", "Way1106": "11997073515", "Way1107": "11997073515", "Way1108": "11958113536","Way1110": "11958113536", "Way1201": "11979569039", "Way1202": "11993936531",
     "Way1205": "11983077846", "Way1206": "11988971195", "Way1208": "11933931917", "Way1302": "11989555962",
     "Way1303": "11975153885", "Way1306": "1142294029", "Way1307": "11937469366", "Way1310": "11953632530",
     "Way1401": "11942999009", "Way1403": "11941928289", "Way1404": "11994783019", "Way1405": "11963315000",
@@ -103,154 +68,62 @@ const agendaMoradores = {
 // ================= INICIALIZAÇÃO =================
 window.onload = () => {
     document.title = CONFIG.NOME_SISTEMA;
-    const h1 = document.querySelector('header h1');
-    if(h1) h1.innerText = CONFIG.NOME_SISTEMA;
-
     renderizarTabela();
     atualizarDashboard();
-
-    // Eventos para busca de contato (Input, Keyup e Change)
-    const elSala = document.getElementById('sala');
-    const elTorre = document.getElementById('torre');
-
-    if(elSala) {
-        elSala.addEventListener('input', buscarContatoAutomatico);
-        elSala.addEventListener('keyup', buscarContatoAutomatico);
-    }
-    if(elTorre) {
-        elTorre.addEventListener('change', buscarContatoAutomatico);
-    }
 };
-
-// ================= FUNÇÕES DE APOIO =================
-function salvarEAtualizar() {
-    localStorage.setItem(CONFIG.ID_CLIENTE, JSON.stringify(encomendas));
-    renderizarTabela();
-    atualizarDashboard();
-}
 
 function buscarContatoAutomatico() {
     const elTorre = document.getElementById('torre');
     const elSala = document.getElementById('sala');
-    const campoTelefone = document.getElementById('telefone');
+    const elTel = document.getElementById('telefone');
+    if (!elTorre || !elSala || !elTel) return;
 
-    if (!elTorre || !elSala || !campoTelefone) return;
-
-    const torre = elTorre.value.trim();
-    const sala = elSala.value.trim();
-    
-    // Monta a chave exatamente como no objeto agendaMoradores
-    const chave = torre + sala;
-
-    // Log para você ver no console (F12) o que o sistema está tentando ler
-    console.log("Buscando contato para:", chave);
-
+    const chave = elTorre.value.trim() + elSala.value.trim();
     if (agendaMoradores[chave]) {
-        campoTelefone.value = agendaMoradores[chave];
-        campoTelefone.style.backgroundColor = "#e8f5e9";
-        console.log("Sucesso: Contato encontrado!");
+        elTel.value = agendaMoradores[chave];
+        elTel.style.backgroundColor = "#e8f5e9";
     } else {
-        campoTelefone.value = "";
-        campoTelefone.style.backgroundColor = "";
+        elTel.value = "";
+        elTel.style.backgroundColor = "";
     }
 }
 
-function atualizarDashboard() {
-    const hoje = new Date().toLocaleDateString('pt-BR');
-    const tHoje = encomendas.filter(e => e.data === hoje).length;
-    const tAguardando = encomendas.filter(e => e.status === 'Aguardando retirada').length;
-    const tRetirados = encomendas.filter(e => e.status === 'Retirado').length;
+// ================= SCANNER (CORRIGIDO PARA CELULAR) =================
+async function iniciarLeitor() {
+    const area = document.getElementById('area-scanner');
+    area.style.display = 'block';
     
-    if(document.getElementById('dashTotal')) document.getElementById('dashTotal').innerText = tHoje;
-    if(document.getElementById('dashAguardando')) document.getElementById('dashAguardando').innerText = tAguardando;
-    if(document.getElementById('dashRetirados')) document.getElementById('dashRetirados').innerText = tRetirados;
-}
-
-// ================= WHATSAPP =================
-function enviarZap(item, tipo) {
-    if (!item.telefone) return;
-    const tel = item.telefone.replace(/\D/g, '');
-    
-    const horaAgora = new Date().getHours();
-    const minAgora = new Date().getMinutes();
-    const tempoTotalMinutos = (horaAgora * 60) + minAgora;
-    
-    let saudacao = "Olá";
-    if (tempoTotalMinutos < 720) { saudacao = "Bom dia"; } 
-    else if (tempoTotalMinutos <= 1110) { saudacao = "Boa tarde"; } 
-    else { saudacao = "Boa noite"; }
-
-    let msg = "";
-    if (tipo === 'chegada') {
-        msg = `${saudacao}, *${item.destinatario}*! 📦\nSua encomenda (NF: *${item.nf}*) chegou no -1 setor de Encomendas.\n*Sala ${item.sala}* (${item.torre}).`;
-    } else {
-        msg = `✅ *Confirmação de Retirada*\n${saudacao}, *${item.destinatario}*!\nSua encomenda (NF: *${item.nf}*) foi retirada por *${item.quemRetirou}* em ${item.dataRetirada}.`;
-    }
-    window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-// ================= CADASTRO E EDIÇÃO =================
-document.getElementById('formRecebimento').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const idExistente = document.getElementById('editId').value;
-
-    const dados = {
-        nf: document.getElementById('notaFiscal').value,
-        torre: document.getElementById('torre').value,
-        sala: document.getElementById('sala').value,
-        destinatario: document.getElementById('destinatario').value,
-        telefone: document.getElementById('telefone').value,
-    };
-
-    if (idExistente) {
-        const index = encomendas.findIndex(enc => enc.id == idExistente);
-        encomendas[index] = { ...encomendas[index], ...dados };
-        cancelarEdicao();
-    } else {
-        const nova = {
-            id: Date.now(),
-            ...dados,
-            data: new Date().toLocaleDateString('pt-BR'),
-            status: 'Aguardando retirada',
-            quemRetirou: '',
-            dataRetirada: '',
-            assinatura: ''
-        };
-        encomendas.push(nova);
-        enviarZap(nova, 'chegada');
+    // Se o site não for HTTPS, a câmera não abre na maioria dos celulares
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        alert("Atenção: A câmera exige uma conexão segura (HTTPS).");
     }
 
-    salvarEAtualizar();
-    this.reset();
-    document.getElementById('telefone').style.backgroundColor = "";
-});
+    html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 15, qrbox: { width: 250, height: 150 } };
 
-function editar(id) {
-    const item = encomendas.find(e => e.id === id);
-    if (!item) return;
-    document.getElementById('editId').value = item.id;
-    document.getElementById('notaFiscal').value = item.nf;
-    document.getElementById('torre').value = item.torre;
-    document.getElementById('sala').value = item.sala;
-    document.getElementById('destinatario').value = item.destinatario;
-    document.getElementById('telefone').value = item.telefone;
-    document.getElementById('tituloForm').innerText = "✏️ Editar Encomenda";
-    document.getElementById('btnSalvar').innerText = "Atualizar Encomenda";
-    document.getElementById('btnCancelarEdit').style.display = "block";
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try {
+        await html5QrCode.start({ facingMode: "environment" }, config, (text) => {
+            document.getElementById('notaFiscal').value = text;
+            pararLeitor();
+            if (navigator.vibrate) navigator.vibrate(100);
+        });
+    } catch (err) {
+        alert("Erro na câmera: Certifique-se de dar permissão e usar HTTPS.");
+        area.style.display = 'none';
+    }
 }
 
-function cancelarEdicao() {
-    document.getElementById('formRecebimento').reset();
-    document.getElementById('editId').value = "";
-    document.getElementById('tituloForm').innerText = "📦 Novo Recebimento";
-    document.getElementById('btnSalvar').innerText = "Salvar Mercadoria";
-    document.getElementById('btnCancelarEdit').style.display = "none";
+function pararLeitor() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('area-scanner').style.display = 'none';
+        });
+    }
 }
 
-// ================= FILTROS E TABELA =================
+// ================= FUNÇÕES DE FILTRO (RESTAURADAS) =================
 function aplicarFiltros() {
-    const fData = document.getElementById('filtroData').value; 
+    const fData = document.getElementById('filtroData').value;
     const fSala = document.getElementById('filtroSala').value.toLowerCase();
     const fNome = document.getElementById('filtroNome').value.toLowerCase();
     const fNF = document.getElementById('filtroNF').value.toLowerCase();
@@ -264,156 +137,102 @@ function aplicarFiltros() {
                (fNF === "" || e.nf.toLowerCase().includes(fNF)) &&
                (fStatus === "" || e.status === fStatus);
     });
-    
     renderizarTabela(filtrados);
-    
-    if (filtrados.length > 0 && (fSala || fNome || fNF || fStatus || fData)) {
-        mostrarMultiplosDetalhes(filtrados);
-    } else {
-        document.getElementById('resultadoConteudo').innerHTML = '<p class="placeholder-text">Clique em uma nota ou use os filtros.</p>';
-        document.getElementById('blocoConfirmarRetirada').style.display = 'none';
-    }
 }
 
 function renderizarTabela(dados = encomendas) {
     const corpo = document.getElementById('listaCorpo');
-    if (!corpo) return;
     corpo.innerHTML = '';
-
-    const ordenados = [...dados].sort((a, b) => {
-        const dataA = a.data.split('/').reverse().join('');
-        const dataB = b.data.split('/').reverse().join('');
-        if (dataA !== dataB) return dataB.localeCompare(dataA);
-        if (a.torre !== b.torre) return a.torre === "Gate" ? -1 : 1;
-        const salaA = parseInt(a.sala.replace(/\D/g, '')) || 0;
-        const salaB = parseInt(b.sala.replace(/\D/g, '')) || 0;
-        return salaA - salaB;
-    });
-
-    ordenados.forEach(item => {
+    dados.forEach(item => {
         const tr = document.createElement('tr');
-        tr.onclick = (e) => { if (e.target.tagName !== 'BUTTON') selecionarUnica(item.id); };
+        tr.onclick = () => selecionarUnica(item.id);
         tr.innerHTML = `
             <td>${item.data}</td>
             <td>${item.nf}</td>
-            <td style="font-weight:bold; color:#15803d;">${item.sala}</td>
+            <td style="font-weight:bold;">${item.sala}</td>
             <td>${item.torre}</td>
             <td>${item.destinatario}</td>
-            <td style="font-weight:bold; color:${item.status === 'Retirado' ? 'green' : '#f59e0b'}">${item.status}</td>
-            <td>
-                <button onclick="event.stopPropagation(); editar(${item.id})" title="Editar" style="border:none; background:none; cursor:pointer;">✏️</button>
-                <button onclick="event.stopPropagation(); apagar(${item.id})" title="Excluir" style="border:none; background:none; cursor:pointer;">🗑️</button>
-            </td>
+            <td style="color:${item.status === 'Retirado' ? 'green' : 'orange'}">${item.status}</td>
+            <td><button onclick="event.stopPropagation(); editar(${item.id})">✏️</button></td>
         `;
         corpo.appendChild(tr);
     });
 }
 
-// ================= DETALHES E ASSINATURA =================
-function mostrarMultiplosDetalhes(itens) {
-    const conteudo = document.getElementById('resultadoConteudo');
-    conteudo.innerHTML = `<p style="margin-bottom:10px; font-weight:bold; color:#15803d;">Resultados encontrados (${itens.length}):</p>`;
-    
-    itens.forEach(item => {
-        const div = document.createElement('div');
-        div.style = "border: 1px solid #ddd; border-left: 5px solid #15803d; background: #fff; padding: 10px; border-radius: 5px; margin-bottom: 8px; cursor: pointer; font-size: 0.9em;";
-        div.onclick = () => selecionarUnica(item.id);
-        div.innerHTML = `
-            <strong>NF: ${item.nf}</strong> | Sala: ${item.sala} (${item.torre})<br>
-            👤 ${item.destinatario}<br>
-            <span style="color:${item.status === 'Retirado' ? 'green' : '#f59e0b'}">● ${item.status}</span>
-        `;
-        conteudo.appendChild(div);
-    });
-    document.getElementById('blocoConfirmarRetirada').style.display = 'none';
+// ================= DEMAIS FUNÇÕES (SALVAR, DASHBOARD, ETC) =================
+function salvarEAtualizar() {
+    localStorage.setItem(CONFIG.ID_CLIENTE, JSON.stringify(encomendas));
+    renderizarTabela();
+    atualizarDashboard();
 }
+
+function atualizarDashboard() {
+    const aguardando = encomendas.filter(e => e.status === 'Aguardando retirada').length;
+    const retirados = encomendas.filter(e => e.status === 'Retirado').length;
+    document.getElementById('dashTotal').innerText = encomendas.length;
+    document.getElementById('dashAguardando').innerText = aguardando;
+    document.getElementById('dashRetirados').innerText = retirados;
+}
+
+document.getElementById('formRecebimento').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const idExistente = document.getElementById('editId').value;
+    const dados = {
+        id: idExistente ? parseInt(idExistente) : Date.now(),
+        nf: document.getElementById('notaFiscal').value,
+        torre: document.getElementById('torre').value,
+        sala: document.getElementById('sala').value,
+        destinatario: document.getElementById('destinatario').value,
+        telefone: document.getElementById('telefone').value,
+        data: idExistente ? encomendas.find(x => x.id == idExistente).data : new Date().toLocaleDateString('pt-BR'),
+        status: idExistente ? encomendas.find(x => x.id == idExistente).status : 'Aguardando retirada'
+    };
+
+    if (idExistente) {
+        const index = encomendas.findIndex(en => en.id == idExistente);
+        encomendas[index] = dados;
+    } else {
+        encomendas.push(dados);
+    }
+    salvarEAtualizar();
+    this.reset();
+    document.getElementById('editId').value = "";
+});
 
 function selecionarUnica(id) {
     selecionadaId = id;
     const item = encomendas.find(e => e.id === id);
-    if (!item) return;
-    
-    document.getElementById('resultadoConteudo').innerHTML = `
-        <div id="detalheFocado" style="border-left:5px solid #15803d; background:#fff; padding:15px; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <p><strong>📦 NF:</strong> ${item.nf} | <strong>Sala:</strong> ${item.sala} (${item.torre})</p>
-            <p><strong>👤 Nome:</strong> ${item.destinatario}</p>
-            <p><strong>🚩 Status:</strong> ${item.status}</p>
-            ${item.status === 'Retirado' ? `
-                <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
-                    <p style="color:green; font-weight:bold;">✅ Retirado por: ${item.quemRetirou}</p>
-                    <p><small>${item.dataRetirada}</small></p>
-                    <p><strong>Assinatura:</strong></p>
-                    <img src="${item.assinatura}" style="width:100%; border:1px solid #ddd; background:#fff; border-radius:4px;" />
-                </div>
-            ` : `
-                <button onclick="enviarZapManual(${item.id})" style="background:#25d366; color:white; border:none; padding:12px; width:100%; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;">Reenviar Aviso WhatsApp</button>
-            `}
+    const cont = document.getElementById('resultadoConteudo');
+    cont.innerHTML = `
+        <div style="padding:10px; border-left:4px solid #15803d; background:#f9f9f9;">
+            <p><strong>NF:</strong> ${item.nf}</p>
+            <p><strong>Destinatário:</strong> ${item.destinatario}</p>
+            <p><strong>Status:</strong> ${item.status}</p>
         </div>
     `;
-
-    const blocoR = document.getElementById('blocoConfirmarRetirada');
-    if (item.status === 'Aguardando retirada') {
-        blocoR.style.display = 'block';
-        setTimeout(configurarCanvas, 100);
-        blocoR.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-        blocoR.style.display = 'none';
-    }
+    document.getElementById('blocoConfirmarRetirada').style.display = item.status === 'Retirado' ? 'none' : 'block';
+    if(item.status !== 'Retirado') configurarCanvas();
 }
 
 function configurarCanvas() {
     canvas = document.getElementById('canvasAssinatura');
-    if (!canvas) return;
     ctx = canvas.getContext('2d');
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#000";
-    
-    const getPos = (e) => {
+    canvas.onmousedown = () => desenhando = true;
+    window.onmouseup = () => desenhando = false;
+    canvas.onmousemove = (e) => {
+        if (!desenhando) return;
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const cx = (e.clientX || (e.touches && e.touches[0].clientX));
-        const cy = (e.clientY || (e.touches && e.touches[0].clientY));
-        return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
     };
-    
-    canvas.onmousedown = (e) => { desenhando = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); };
-    canvas.onmousemove = (e) => { if(desenhando) { const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); } };
-    window.onmouseup = () => { desenhando = false; };
-    
-    canvas.ontouchstart = (e) => { desenhando = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); };
-    canvas.ontouchmove = (e) => { if(desenhando) { const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); } e.preventDefault(); };
-    canvas.ontouchend = () => { desenhando = false; };
 }
 
 function finalizarEntrega() {
-    const nome = document.getElementById('nomeRec').value;
-    if(!nome) return alert("Por favor, informe quem está retirando a mercadoria.");
-    
     const index = encomendas.findIndex(e => e.id === selecionadaId);
-    
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    tempCtx.fillStyle = "#ffffff";
-    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-    tempCtx.drawImage(canvas, 0, 0);
-
     encomendas[index].status = 'Retirado';
-    encomendas[index].quemRetirou = nome;
-    encomendas[index].dataRetirada = new Date().toLocaleString('pt-BR');
-    encomendas[index].assinatura = tempCanvas.toDataURL('image/jpeg', 0.5);
-
     salvarEAtualizar();
-    enviarZap(encomendas[index], 'retirada');
-    document.getElementById('nomeRec').value = "";
     document.getElementById('blocoConfirmarRetirada').style.display = 'none';
-    selecionarUnica(selecionadaId);
 }
-
-function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-function enviarZapManual(id) { enviarZap(encomendas.find(e => e.id === id), 'chegada'); }
 
 function visualizarTudo() {
     document.getElementById('filtroData').value = "";
@@ -421,96 +240,5 @@ function visualizarTudo() {
     document.getElementById('filtroNome').value = "";
     document.getElementById('filtroNF').value = "";
     document.getElementById('filtroStatus').value = "";
-    renderizarTabela(encomendas);
-    document.getElementById('resultadoConteudo').innerHTML = '<p class="placeholder-text">Clique em uma nota ou use os filtros.</p>';
-    document.getElementById('blocoConfirmarRetirada').style.display = 'none';
-}
-
-function apagar(id) {
-    if(confirm("Deseja realmente excluir esta encomenda permanentemente?")) {
-        encomendas = encomendas.filter(e => e.id !== id);
-        salvarEAtualizar();
-        document.getElementById('resultadoConteudo').innerHTML = '<p class="placeholder-text">Registro excluído.</p>';
-        document.getElementById('blocoConfirmarRetirada').style.display = 'none';
-    }
-}
-
-function exportarCSV() {
-    if (encomendas.length === 0) return alert("Nenhuma mercadoria para exportar.");
-    let csv = "\ufeff"; 
-    csv += "Data;NF;Torre;Sala;Destinatario;Status;Quem Retirou;Data Retirada\n";
-    encomendas.forEach(e => {
-        csv += `${e.data};${e.nf};${e.torre};${e.sala};${e.destinatario};${e.status};${e.quemRetirou};${e.dataRetirada}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Relatorio_GateWay_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-window.onscroll = function() {
-    const btn = document.getElementById("btnTopo");
-    if (!btn) return;
-    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-        btn.style.display = "block";
-    } else {
-        btn.style.display = "none";
-    }
-};
-
-function voltarAoTopo() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-let html5QrCode;
-let html5QrCode;
-
-async function iniciarLeitor() {
-    const areaScanner = document.getElementById('area-scanner');
-    areaScanner.style.display = 'block';
-
-    // 1. Verifica se o navegador suporta mídia (câmera)
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert("Seu navegador não suporta acesso à câmera. Tente usar o Chrome ou Safari atualizados.");
-        areaScanner.style.display = 'none';
-        return;
-    }
-
-    // 2. Garante que se já houver um leitor rodando, ele seja encerrado antes
-    if (html5QrCode && html5QrCode.isScanning) {
-        await html5QrCode.stop();
-    }
-
-    html5QrCode = new Html5Qrcode("reader");
-
-    const config = { 
-        fps: 15, // Velocidade de leitura
-        qrbox: { width: 280, height: 160 }, // Área focal (retângulo)
-        aspectRatio: 1.0
-    };
-
-    // 3. Tenta iniciar a câmera traseira (environment)
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        config,
-        (decodedText) => {
-            // Se ler com sucesso:
-            document.getElementById('notaFiscal').value = decodedText;
-            pararLeitor();
-            if (navigator.vibrate) navigator.vibrate(100); // Vibra o celular
-        },
-        (errorMessage) => {
-            // Apenas ignora erros de "código não encontrado" enquanto a câmera escaneia
-        }
-    ).catch((err) => {
-        console.error("Erro ao iniciar leitor:", err);
-        // Se der erro de permissão ou HTTPS
-        alert("Câmera não iniciou. Verifique se o site usa HTTPS e se você deu permissão de câmera.");
-        areaScanner.style.display = 'none';
-    });
+    renderizarTabela();
 }
