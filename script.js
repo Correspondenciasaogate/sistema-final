@@ -1,13 +1,14 @@
 // ================= CONFIGURAÇÃO WHITE LABEL =================
 const CONFIG = {
     NOME_SISTEMA: "Controle de Encomendas - Gate", // Nome no topo
-    ID_CLIENTE: "banco_dados_gate_v1",             // Mude este ID para cada novo condomínio
+    ID_CLIENTE: "banco_dados_gate_v1",              // ID do Banco
 };
 
 // ================= VARIÁVEIS GLOBAIS =================
 let encomendas = JSON.parse(localStorage.getItem(CONFIG.ID_CLIENTE)) || [];
 let selecionadaId = null;
 let canvas, ctx, desenhando = false;
+let html5QrCode;
 
 // ================= AGENDA DE MORADORES =================
 const agendaMoradores = {
@@ -53,7 +54,7 @@ const agendaMoradores = {
     "Gate1010": "11998231391", "Gate1012": "11988406990", "Gate1014": "11994118788", "Gate1022": "11985863922",
     "Gate1023": "11985863922", "Gate1024": "11981957063", "Gate1025": "11970739076", "Gate1101": "11973781626",
     "Gate1102": "11948394992", "Gate1104": "11999258982", "Gate1105": "11992136352", "Gate1106": "11992136352",
-    "Gate1107": "11943668324", "Gate1108": "11943668324", "Gate1110": "11971507476", "Gate1112": "11940277289",
+    "Gate1107": "11943668324", "Gate1108": "11943668324", "Gate1110": "11971507476", "Gate1111": "11983199665","Gate1112": "11940277289",
     "Gate1113": "11943123167", "Gate1114": "1120609991", "Gate1115": "1120609991", "Gate1116": "1120609991",
     "Gate1117": "1120609991", "Gate1118": "1120609991", "Gate1119": "1120609991", "Gate1120": "1120609991",
     "Gate1121": "1120609991", "Gate1122": "11940611428", "Gate1123": "11940611428", "Gate1124": "11940611428",
@@ -108,6 +109,8 @@ window.onload = () => {
 
     renderizarTabela();
     atualizarDashboard();
+    
+    // Escutas para busca automática
     document.getElementById('sala').addEventListener('input', buscarContatoAutomatico);
     document.getElementById('torre').addEventListener('change', buscarContatoAutomatico);
 };
@@ -124,6 +127,7 @@ function buscarContatoAutomatico() {
     const sala = document.getElementById('sala').value.trim();
     const campoTelefone = document.getElementById('telefone');
     const chave = torre + sala;
+    
     if (agendaMoradores[chave]) {
         campoTelefone.value = agendaMoradores[chave];
         campoTelefone.style.backgroundColor = "#e8f5e9";
@@ -133,11 +137,22 @@ function buscarContatoAutomatico() {
     }
 }
 
+function obterSaudacao() {
+    const hora = new Date().getHours();
+    const min = new Date().getMinutes();
+    const tempoTotalMinutos = (hora * 60) + min;
+
+    if (tempoTotalMinutos < 720) return "Bom dia";
+    if (tempoTotalMinutos <= 1110) return "Boa tarde";
+    return "Boa noite";
+}
+
 function atualizarDashboard() {
     const hoje = new Date().toLocaleDateString('pt-BR');
     const tHoje = encomendas.filter(e => e.data === hoje).length;
     const tAguardando = encomendas.filter(e => e.status === 'Aguardando retirada').length;
     const tRetirados = encomendas.filter(e => e.status === 'Retirado').length;
+    
     document.getElementById('dashTotal').innerText = tHoje;
     document.getElementById('dashAguardando').innerText = tAguardando;
     document.getElementById('dashRetirados').innerText = tRetirados;
@@ -147,20 +162,7 @@ function atualizarDashboard() {
 function enviarZap(item, tipo) {
     if (!item.telefone) return;
     const tel = item.telefone.replace(/\D/g, '');
-    
-    // Lógica de saudação por horário
-    const horaAgora = new Date().getHours();
-    const minAgora = new Date().getMinutes();
-    const tempoTotalMinutos = (horaAgora * 60) + minAgora;
-    
-    let saudacao = "Olá";
-    if (tempoTotalMinutos < 720) { // Até 12:00
-        saudacao = "Bom dia";
-    } else if (tempoTotalMinutos <= 1110) { // Até 18:30 (18*60 + 30)
-        saudacao = "Boa tarde";
-    } else {
-        saudacao = "Boa noite";
-    }
+    const saudacao = obterSaudacao();
 
     let msg = "";
     if (tipo === 'chegada') {
@@ -204,6 +206,7 @@ document.getElementById('formRecebimento').addEventListener('submit', function(e
 
     salvarEAtualizar();
     this.reset();
+    buscarContatoAutomatico();
 });
 
 function editar(id) {
@@ -215,6 +218,7 @@ function editar(id) {
     document.getElementById('sala').value = item.sala;
     document.getElementById('destinatario').value = item.destinatario;
     document.getElementById('telefone').value = item.telefone;
+    
     document.getElementById('tituloForm').innerText = "✏️ Editar Encomenda";
     document.getElementById('btnSalvar').innerText = "Atualizar Encomenda";
     document.getElementById('btnCancelarEdit').style.display = "block";
@@ -261,17 +265,12 @@ function renderizarTabela(dados = encomendas) {
     if (!corpo) return;
     corpo.innerHTML = '';
 
-    // MELHORIA DE ORDENAÇÃO: Data -> Torre (Gate primeiro) -> Sala crescente
     const ordenados = [...dados].sort((a, b) => {
         const dataA = a.data.split('/').reverse().join('');
         const dataB = b.data.split('/').reverse().join('');
-        if (dataA !== dataB) return dataB.localeCompare(dataA); // Data mais recente primeiro
-
-        if (a.torre !== b.torre) return a.torre === "Gate" ? -1 : 1; // Gate primeiro que Way
-
-        const salaA = parseInt(a.sala.replace(/\D/g, '')) || 0;
-        const salaB = parseInt(b.sala.replace(/\D/g, '')) || 0;
-        return salaA - salaB; // Sala crescente
+        if (dataA !== dataB) return dataB.localeCompare(dataA);
+        if (a.torre !== b.torre) return a.torre === "Gate" ? -1 : 1;
+        return (parseInt(a.sala) || 0) - (parseInt(b.sala) || 0);
     });
 
     ordenados.forEach(item => {
@@ -294,31 +293,13 @@ function renderizarTabela(dados = encomendas) {
 }
 
 // ================= DETALHES E ASSINATURA =================
-function mostrarMultiplosDetalhes(itens) {
-    const conteudo = document.getElementById('resultadoConteudo');
-    conteudo.innerHTML = `<p style="margin-bottom:10px; font-weight:bold; color:#15803d;">Resultados encontrados (${itens.length}):</p>`;
-    
-    itens.forEach(item => {
-        const div = document.createElement('div');
-        div.style = "border: 1px solid #ddd; border-left: 5px solid #15803d; background: #fff; padding: 10px; border-radius: 5px; margin-bottom: 8px; cursor: pointer; font-size: 0.9em;";
-        div.onclick = () => selecionarUnica(item.id);
-        div.innerHTML = `
-            <strong>NF: ${item.nf}</strong> | Sala: ${item.sala} (${item.torre})<br>
-            👤 ${item.destinatario}<br>
-            <span style="color:${item.status === 'Retirado' ? 'green' : '#f59e0b'}">● ${item.status}</span>
-        `;
-        conteudo.appendChild(div);
-    });
-    document.getElementById('blocoConfirmarRetirada').style.display = 'none';
-}
-
 function selecionarUnica(id) {
     selecionadaId = id;
     const item = encomendas.find(e => e.id === id);
     if (!item) return;
     
     document.getElementById('resultadoConteudo').innerHTML = `
-        <div style="border-left:5px solid #15803d; background:#fff; padding:15px; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div id="detalheFocado" style="border-left:5px solid #15803d; background:#fff; padding:15px; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <p><strong>📦 NF:</strong> ${item.nf} | <strong>Sala:</strong> ${item.sala} (${item.torre})</p>
             <p><strong>👤 Nome:</strong> ${item.destinatario}</p>
             <p><strong>🚩 Status:</strong> ${item.status}</p>
@@ -338,7 +319,10 @@ function selecionarUnica(id) {
     const blocoR = document.getElementById('blocoConfirmarRetirada');
     if (item.status === 'Aguardando retirada') {
         blocoR.style.display = 'block';
-        setTimeout(configurarCanvas, 100);
+        setTimeout(() => {
+            configurarCanvas();
+            blocoR.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
     } else {
         blocoR.style.display = 'none';
     }
@@ -375,7 +359,6 @@ function finalizarEntrega() {
     
     const index = encomendas.findIndex(e => e.id === selecionadaId);
     
-    // Criar um canvas temporário para garantir o fundo branco na imagem salva
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
@@ -396,105 +379,13 @@ function finalizarEntrega() {
     selecionarUnica(selecionadaId);
 }
 
-function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-function enviarZapManual(id) { enviarZap(encomendas.find(e => e.id === id), 'chegada'); }
-
-function visualizarTudo() {
-    document.getElementById('filtroData').value = "";
-    document.getElementById('filtroSala').value = "";
-    document.getElementById('filtroNome').value = "";
-    document.getElementById('filtroNF').value = "";
-    document.getElementById('filtroStatus').value = "";
-    renderizarTabela(encomendas);
-    document.getElementById('resultadoConteudo').innerHTML = '<p class="placeholder-text">Clique em uma nota ou use os filtros.</p>';
-    document.getElementById('blocoConfirmarRetirada').style.display = 'none';
-}
-
-function apagar(id) {
-    if(confirm("Deseja realmente excluir esta encomenda permanentemente?")) {
-        encomendas = encomendas.filter(e => e.id !== id);
-        salvarEAtualizar();
-        document.getElementById('resultadoConteudo').innerHTML = '<p class="placeholder-text">Registro excluído.</p>';
-        document.getElementById('blocoConfirmarRetirada').style.display = 'none';
-    }
-}
-
-function exportarCSV() {
-    if (encomendas.length === 0) return alert("Nenhuma mercadoria para exportar.");
-    let csv = "\ufeff"; 
-    csv += "Data;NF;Torre;Sala;Destinatario;Status;Quem Retirou;Data Retirada\n";
-    encomendas.forEach(e => {
-        csv += `${e.data};${e.nf};${e.torre};${e.sala};${e.destinatario};${e.status};${e.quemRetirou};${e.dataRetirada}\n`;
-    });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Relatorio_GateWay_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-// Mostrar/Esconder botão de topo ao rolar a página
-window.onscroll = function() {
-    const btn = document.getElementById("btnTopo");
-    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-        btn.style.display = "block";
-    } else {
-        btn.style.display = "none";
-    }
-};
-
-function voltarAoTopo() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// Melhoria: Ao clicar na linha, rolar automaticamente para a área de assinatura
-function selecionarUnica(id) {
-    selecionadaId = id;
-    const item = encomendas.find(e => e.id === id);
-    if (!item) return;
-    
-    document.getElementById('resultadoConteudo').innerHTML = `
-        <div id="detalheFocado" style="border-left:5px solid #15803d; background:#fff; padding:15px; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <p><strong>📦 NF:</strong> ${item.nf} | <strong>Sala:</strong> ${item.sala} (${item.torre})</p>
-            <p><strong>👤 Nome:</strong> ${item.destinatario}</p>
-            <p><strong>🚩 Status:</strong> ${item.status}</p>
-            ${item.status === 'Retirado' ? `
-                <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
-                    <p style="color:green; font-weight:bold;">✅ Retirado por: ${item.quemRetirou}</p>
-                    <p><small>${item.dataRetirada}</small></p>
-                    <p><strong>Assinatura:</strong></p>
-                    <img src="${item.assinatura}" style="width:100%; border:1px solid #ddd; background:#fff; border-radius:4px;" />
-                </div>
-            ` : `
-                <button onclick="enviarZapManual(${item.id})" style="background:#25d366; color:white; border:none; padding:12px; width:100%; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;">Reenviar Aviso WhatsApp</button>
-            `}
-        </div>
-    `;
-
-    const blocoR = document.getElementById('blocoConfirmarRetirada');
-    if (item.status === 'Aguardando retirada') {
-        blocoR.style.display = 'block';
-        setTimeout(configurarCanvas, 100);
-        
-        // ROLAR AUTOMATICAMENTE PARA A ASSINATURA (Melhoria solicitada)
-        blocoR.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } else {
-        blocoR.style.display = 'none';
-    }
-    let html5QrCode;
-
+// ================= CÂMERA (QR/BARCODE) =================
 function iniciarLeitor() {
     const readerDiv = document.getElementById('reader');
     readerDiv.style.display = 'block';
 
-    // Se já houver uma instância rodando, para ela antes de começar
     if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            começarScan();
-        }).catch(() => começarScan());
+        html5QrCode.stop().then(() => começarScan()).catch(() => começarScan());
     } else {
         começarScan();
     }
@@ -502,23 +393,47 @@ function iniciarLeitor() {
 
 function começarScan() {
     html5QrCode = new Html5Qrcode("reader");
-    const config = { 
-        fps: 10, 
-        qrbox: { width: 250, height: 150 },
-        aspectRatio: 1.0 
-    };
-
     html5QrCode.start(
-        { facingMode: "environment" }, // Força a câmera traseira
-        config,
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
         (decodedText) => {
             document.getElementById('notaFiscal').value = decodedText;
             pararLeitor();
-            // Som de sucesso (opcional)
             navigator.vibrate(100); 
         }
-    ).catch(err => {
-        console.error(err);
-        alert("Erro: Certifique-se de dar permissão à câmera nas configurações do seu navegador.");
+    ).catch(err => alert("Erro: Ative a permissão da câmera."));
+}
+
+function pararLeitor() {
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            document.getElementById('reader').style.display = 'none';
+        });
+    }
+}
+
+// ================= OUTRAS FUNÇÕES =================
+function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+function enviarZapManual(id) { enviarZap(encomendas.find(e => e.id === id), 'chegada'); }
+function voltarAoTopo() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+function apagar(id) {
+    if(confirm("Deseja excluir permanentemente?")) {
+        encomendas = encomendas.filter(e => e.id !== id);
+        salvarEAtualizar();
+        document.getElementById('resultadoConteudo').innerHTML = '<p class="placeholder-text">Registro excluído.</p>';
+    }
+}
+
+function exportarCSV() {
+    if (encomendas.length === 0) return alert("Nada para exportar.");
+    let csv = "\ufeffData;NF;Torre;Sala;Destinatario;Status;Quem Retirou;Data Retirada\n";
+    encomendas.forEach(e => {
+        csv += `${e.data};${e.nf};${e.torre};${e.sala};${e.destinatario};${e.status};${e.quemRetirou};${e.dataRetirada}\n`;
     });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Relatorio_GateWay.csv`;
+    link.click();
 }
