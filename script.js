@@ -470,43 +470,47 @@ function voltarAoTopo() {
 let html5QrCode;
 let html5QrCode;
 
-function iniciarLeitor() {
+async function iniciarLeitor() {
     const areaScanner = document.getElementById('area-scanner');
-    areaScanner.style.display = 'block'; // Mostra o bloco da câmera
+    areaScanner.style.display = 'block';
+
+    // 1. Verifica se o navegador suporta mídia (câmera)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Seu navegador não suporta acesso à câmera. Tente usar o Chrome ou Safari atualizados.");
+        areaScanner.style.display = 'none';
+        return;
+    }
+
+    // 2. Garante que se já houver um leitor rodando, ele seja encerrado antes
+    if (html5QrCode && html5QrCode.isScanning) {
+        await html5QrCode.stop();
+    }
 
     html5QrCode = new Html5Qrcode("reader");
+
     const config = { 
-        fps: 15, 
-        qrbox: { width: 250, height: 150 },
-        aspectRatio: 1.777778 // Formato wide para pegar códigos de barra longos
+        fps: 15, // Velocidade de leitura
+        qrbox: { width: 280, height: 160 }, // Área focal (retângulo)
+        aspectRatio: 1.0
     };
 
+    // 3. Tenta iniciar a câmera traseira (environment)
     html5QrCode.start(
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
+            // Se ler com sucesso:
             document.getElementById('notaFiscal').value = decodedText;
-            pararLeitor(); // Fecha a câmera após ler
-            vibratePhone(); // Feedback tátil
+            pararLeitor();
+            if (navigator.vibrate) navigator.vibrate(100); // Vibra o celular
         },
-        (errorMessage) => { /* Erros de busca de código são ignorados para não travar */ }
+        (errorMessage) => {
+            // Apenas ignora erros de "código não encontrado" enquanto a câmera escaneia
+        }
     ).catch((err) => {
-        alert("Erro ao acessar câmera: " + err);
+        console.error("Erro ao iniciar leitor:", err);
+        // Se der erro de permissão ou HTTPS
+        alert("Câmera não iniciou. Verifique se o site usa HTTPS e se você deu permissão de câmera.");
         areaScanner.style.display = 'none';
     });
-}
-
-function pararLeitor() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => {
-            document.getElementById('area-scanner').style.display = 'none';
-        }).catch(err => console.error("Erro ao parar leitor", err));
-    } else {
-        document.getElementById('area-scanner').style.display = 'none';
-    }
-}
-
-function vibratePhone() {
-    if (navigator.vibrate) navigator.vibrate(100);
-}
 }
