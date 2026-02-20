@@ -1,220 +1,220 @@
-/* ================= CONFIGURAÇÕES GERAIS ================= */
+/* ================= VARIÁVEIS GLOBAIS (White Label) ================= */
 :root {
-    /* Tons de Verde Gate */
-    --primary-green: #15803d; /* Verde Floresta */
-    --light-green: #dcfce7;   /* Verde bem clarinho para fundos */
-    --accent-gold: #f59e0b;   /* Dourado para alertas */
-    --text-dark: #064e3b;     /* Texto verde bem escuro */
-    --bg-gray: #f0fdf4;       /* Fundo da tela levemente esverdeado */
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    /* O JavaScript substituirá estas cores usando o objeto CONFIG */
+    --cor-primaria: #2563eb; 
+    --cor-secundaria: #64748b;
+    --bg: #f1f5f9;
+    --text: #1e293b;
+    --success: #22c55e;
+    --warning: #f59e0b;
 }
 
-#btnTopo {
-    display: none; /* Inicia escondido */
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 99;
-    border: none;
-    outline: none;
-    background-color: var(--primary-green);
-    color: white;
-    cursor: pointer;
-    padding: 15px;
-    border-radius: 50%;
-    font-size: 20px;
-    box-shadow: var(--shadow);
-}
+/* ================= RESET E BASE ================= */
+* { box-sizing: border-box; }
 
-#btnTopo:hover {
-    background-color: #166534;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-gray);
-    color: var(--text-dark);
-    margin: 0;
-    padding: 0;
+body { 
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+    background: var(--bg); 
+    color: var(--text);
+    margin: 0; 
+    padding: 15px; 
+    line-height: 1.5;
 }
 
 header {
-    background-color: var(--primary-green) !important;
+    background-color: var(--cor-primaria);
     color: white;
-    padding: 1rem 2rem;
+    padding: 1.5rem;
     text-align: center;
-    box-shadow: var(--shadow);
-    border-bottom: 4px solid #166534; /* Um verde mais escuro para detalhe */
+    margin-bottom: 20px;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* ================= LAYOUT EM COLUNAS ================= */
+header h1 { margin: 0; font-size: 1.6rem; letter-spacing: -0.5px; }
+
+/* ================= LAYOUT PRINCIPAL ================= */
 main {
     display: grid;
-    grid-template-columns: 1fr 380px; /* Esquerda larga, direita fixa */
+    grid-template-columns: 1fr 380px;
     gap: 20px;
-    padding: 20px;
-    max-width: 1400px;
+    max-width: 1600px;
     margin: 0 auto;
 }
 
-/* Responsividade para telas pequenas */
-@media (max-width: 1000px) {
-    main {
-        grid-template-columns: 1fr;
-    }
-    .lateral-acoes {
-        position: static;
-    }
+.container { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 10px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+    margin-bottom: 20px; 
 }
 
-/* ================= CONTAINERS E BLOCOS ================= */
-.container {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    margin-bottom: 20px;
+/* ================= DASHBOARD ================= */
+#dashboard { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 15px; 
+    margin-bottom: 20px; 
 }
 
-h2, h3 {
-    margin-top: 0;
-    color: var(--primary-green);
-    border-bottom: 2px solid var(--light-green);
-    padding-bottom: 10px;
+.card { 
+    background: white; 
+    padding: 15px; 
+    border-radius: 8px; 
+    text-align: center; 
+    border-bottom: 4px solid var(--cor-primaria); 
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.card h3 { margin: 0; font-size: 0.85rem; color: #64748b; text-transform: uppercase; }
+.card span { font-size: 1.6rem; font-weight: bold; display: block; margin-top: 5px; color: var(--text); }
+
+.card.aguardando { border-color: var(--warning); }
+.card.retirados { border-color: var(--success); }
+
+/* ================= FORMULÁRIOS E INPUTS ================= */
+.campo-grupo, .filtros-grid { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 12px; 
 }
 
-/* ================= FORMULÁRIOS ================= */
-.campo-grupo, .campo-grupo-duplo {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-input, select {
-    padding: 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 14px;
-    outline: none;
+input, select { 
+    width: 100%; 
+    padding: 12px; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 6px; 
+    font-size: 16px; 
+    background-color: #fff;
+    color: var(--text);
     transition: border-color 0.2s;
 }
 
 input:focus, select:focus {
-    border-color: var(--primary-green);
+    outline: none;
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-#notaFiscal { flex: 1; }
-#torre { width: 100px; }
-#sala { width: 100px; }
-#destinatario { flex: 2; }
-#telefone { flex: 1; background-color: #f1f5f9; cursor: not-allowed; }
+.btn-principal { 
+    background: var(--cor-primaria); 
+    color: white; 
+    border: none; 
+    padding: 14px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    width: 100%; 
+    font-size: 1rem;
+    transition: filter 0.2s, transform 0.1s;
+}
+.btn-principal:hover { filter: brightness(0.9); }
+.btn-principal:active { transform: scale(0.98); }
 
-/* Botões */
-/* Botão principal forçado para Verde */
-.btn-principal {
-    background-color: var(--primary-green) !important;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    flex: 1;
+.btn-secundario { 
+    background: var(--cor-secundaria); 
+    color: white; 
+    border: none; 
+    padding: 10px 15px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-size: 0.9rem;
 }
 
-.btn-principal:hover {
-    background-color: #166534 !important;
-}
-
-/* Destaque da linha da tabela ao passar o mouse */
-tr:hover {
-    background-color: #bbf7d0 !important; /* Verde claro ao selecionar */
-}
-
-.btn-secundario {
-    border: none;
-    padding: 10px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-}
-
-/* ================= DASHBOARD ================= */
-#dashboard {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.card {
-    flex: 1;
-    background: white;
-    padding: 15px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: var(--shadow);
-    border-bottom: 4px solid #94a3b8;
-}
-
-.card h3 { border: none; font-size: 14px; color: #64748b; margin-bottom: 5px; }
-.card span { font-size: 24px; font-weight: bold; }
-
-.card.aguardando { border-color: var(--accent-gold); color: var(--accent-gold); }
-.card.retirados { border-color: var(--primary-green); color: var(--primary-green); }
-
-/* ================= FILTROS ================= */
-.filtros-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
-}
-
-/* ================= TABELA ================= */
+/* ================= TABELA DE DADOS ================= */
 .table-responsive {
     overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
+table { width: 100%; border-collapse: collapse; min-width: 650px; }
+th { text-align: left; padding: 14px; background: #f8fafc; font-size: 0.85rem; color: #475569; border-bottom: 2px solid #e2e8f0; }
+td { padding: 14px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 0.95rem; }
+tr:hover { background: #f8fafc; }
+
+/* ================= PAINEL LATERAL (DETALHES) ================= */
+.lateral-acoes { 
+    position: sticky; 
+    top: 20px; 
+    height: fit-content; 
+}
+
+#resultadoBusca { 
+    max-height: 75vh; 
+    overflow-y: auto; 
+    padding-right: 5px;
+}
+
+.card-detalhe-lista {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 6px solid var(--cor-primaria);
+}
+.card-detalhe-lista:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.card-detalhe-lista h4 { margin: 0 0 8px 0; color: var(--cor-primaria); font-size: 1.1rem; }
+.card-detalhe-lista p { margin: 4px 0; font-size: 0.9rem; color: #475569; }
+
+/* ================= ASSINATURA E MÍDIA ================= */
+canvas#canvasAssinatura {
+    display: block;
+    width: 100%; 
+    background: #fafafa;
+    touch-action: none; 
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.bloco-assinatura {
+    background: #f1f5f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+img.assinatura-preview {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
     margin-top: 10px;
+    border: 1px solid #e2e8f0;
+    background: white;
 }
 
-th {
-    background-color: #f8fafc;
-    text-align: left;
-    padding: 12px;
-    font-size: 13px;
-    color: #64748b;
-    border-bottom: 2px solid #e2e8f0;
+/* ================= RESPONSIVIDADE (CELULAR) ================= */
+@media (max-width: 1024px) {
+    main { grid-template-columns: 1fr; }
 }
 
-td {
-    padding: 12px;
-    border-bottom: 1px solid #f1f5f9;
-    font-size: 14px;
-}
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    
+    header { border-radius: 0; margin: -10px -10px 20px -10px; }
 
-tr:hover {
-    background-color: #f0fdf4; /* Verde bem clarinho no hover */
-    cursor: pointer;
-}
+    main {
+        display: flex;
+        flex-direction: column; 
+    }
+    
+    .lateral-acoes {
+        order: -1; 
+        position: static;
+        margin-bottom: 20px;
+    }
 
-/* ================= COLUNA LATERAL (FIXA AO ROLAR) ================= */
-.lateral-acoes {
-    position: sticky;
-    top: 20px;
-    align-self: start;
-}
+    .campo-grupo { flex-direction: column; }
 
-.placeholder-text {
-    color: #94a3b8;
-    text-align: center;
-    padding: 40px 0;
-    font-style: italic;
-}
-
-#canvasAssinatura {
-    touch-action: none;
+    #dashboard { grid-template-columns: 1fr; }
+    
+    .filtros-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .btn-principal { padding: 16px; font-size: 1.1rem; }
 }
