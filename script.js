@@ -147,11 +147,26 @@ function atualizarDashboard() {
 function enviarZap(item, tipo) {
     if (!item.telefone) return;
     const tel = item.telefone.replace(/\D/g, '');
+    
+    // Lógica de saudação por horário
+    const horaAgora = new Date().getHours();
+    const minAgora = new Date().getMinutes();
+    const tempoTotalMinutos = (horaAgora * 60) + minAgora;
+    
+    let saudacao = "Olá";
+    if (tempoTotalMinutos < 720) { // Até 12:00
+        saudacao = "Bom dia";
+    } else if (tempoTotalMinutos <= 1110) { // Até 18:30 (18*60 + 30)
+        saudacao = "Boa tarde";
+    } else {
+        saudacao = "Boa noite";
+    }
+
     let msg = "";
     if (tipo === 'chegada') {
-        msg = `Olá, *${item.destinatario}*! 📦\nSua encomenda (NF: *${item.nf}*) chegou no -1 setor de Encomendas.\n*Sala ${item.sala}* (${item.torre}).`;
+        msg = `${saudacao}, *${item.destinatario}*! 📦\nSua encomenda (NF: *${item.nf}*) chegou no -1 setor de Encomendas.\n*Sala ${item.sala}* (${item.torre}).`;
     } else {
-        msg = `✅ *Confirmação de Retirada*\nOlá, *${item.destinatario}*!\nSua encomenda (NF: *${item.nf}*) foi retirada por *${item.quemRetirou}* em ${item.dataRetirada}.`;
+        msg = `✅ *Confirmação de Retirada*\n${saudacao}, *${item.destinatario}*!\nSua encomenda (NF: *${item.nf}*) foi retirada por *${item.quemRetirou}* em ${item.dataRetirada}.`;
     }
     window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
 }
