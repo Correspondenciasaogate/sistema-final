@@ -3,195 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Gate - Oficial</title>
+    <title>Controle de Encomendas - Gate & Way</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        /* CSS BÁSICO PARA FUNCIONAMENTO */
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
-        button { cursor: pointer; font-weight: bold; border: none; }
-        .btn-principal { background: #15803d; color: white; }
-        .btn-camera { background: #1e293b; color: white; }
-        .btn-importar { background: #0ea5e9; color: white; }
-        #reader { width: 100%; border-radius: 8px; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
-        th { background: #f8f9fa; }
-        .status-aguardando { color: #f59e0b; font-weight: bold; }
-        .status-retirado { color: #15803d; }
-    </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>📦 Novo Recebimento</h2>
-    
-    <button type="button" class="btn-camera" onclick="iniciarLeitor()">📷 Abrir Câmera (QR/Barra)</button>
-    <div id="reader" style="display:none"></div>
-    <button id="btnFecharCam" style="display:none; background:red; color:white;" onclick="pararLeitor()">Fechar Câmera</button>
+<header>
+    <h1>Controle de Encomendas - Gate & Way</h1>
+</header>
 
-    <form id="formEncomenda">
-        <input type="text" id="notaFiscal" placeholder="Nota Fiscal" required>
+<main>
+    <div class="container">
+        <h2>📦 Novo Recebimento</h2>
         
-        <div style="display: flex; gap: 5px;">
-            <select id="torre" style="flex: 1;" required onchange="buscarContato()">
-                <option value="">Torre</option>
-                <option value="Gate">Gate</option>
-                <option value="Way">Way</option>
-            </select>
-            <input type="text" id="sala" placeholder="Sala" style="flex: 1;" required oninput="buscarContato()">
+        <div style="margin-bottom: 15px;">
+            <button type="button" onclick="iniciarLeitor()" style="background: #1e293b; color: white; padding: 12px; border: none; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold;">
+                📷 Ler Código de Barras / QR
+            </button>
+            <div id="reader" style="width: 100%; display: none; margin-top: 10px; border: 2px solid #15803d; border-radius: 8px; overflow: hidden;"></div>
+            <button id="btnFecharCam" style="display:none; background:red; color:white; width:100%; margin-top:5px; border:none; padding:5px; border-radius:5px;" onclick="pararLeitor()">Fechar Câmera</button>
         </div>
 
-        <input type="text" id="destinatario" placeholder="Nome do Destinatário" required>
-        <input type="text" id="telefone" placeholder="Telefone (Automático)" readonly style="background:#e2e8f0">
+        <form id="formEncomenda">
+            <input type="text" id="notaFiscal" placeholder="Nota Fiscal" required>
+            
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
+                <select id="torre" required onchange="buscarContato()">
+                    <option value="">Torre</option>
+                    <option value="Gate">Gate</option>
+                    <option value="Way">Way</option>
+                </select>
+                <input type="text" id="sala" placeholder="Sala" required oninput="buscarContato()">
+            </div>
 
-        <button type="submit" class="btn-principal">Salvar Mercadoria</button>
-    </form>
-</div>
+            <input type="text" id="destinatario" placeholder="Nome do Destinatário" required>
+            <input type="text" id="telefone" placeholder="Telefone (Automático)" readonly style="background:#f1f5f9; margin-bottom: 15px;">
 
-<div class="container">
-    <h3>🔍 Ferramentas</h3>
-    <div style="display: flex; gap: 10px;">
-        <button class="btn-importar" onclick="document.getElementById('inputArquivo').click()">📥 Importar Backup</button>
-        <input type="file" id="inputArquivo" style="display:none" accept=".csv" onchange="importarCSV(event)">
-        <button style="background:#64748b; color:white;" onclick="exportarCSV()">📊 Exportar</button>
+            <button type="submit" style="background: #15803d; color: white; padding: 15px; border: none; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer;">
+                Salvar e Avisar no WhatsApp
+            </button>
+        </form>
     </div>
-</div>
 
-<div class="container" style="overflow-x: auto;">
-    <h3>📋 Registros</h3>
-    <table id="tabela">
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>NF</th>
-                <th>Sala</th>
-                <th>Nome</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody id="lista"></tbody>
-    </table>
-</div>
+    <div class="container">
+        <h3>⚙️ Ferramentas e Backup</h3>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="document.getElementById('inputImportar').click()" style="background: #0ea5e9; color: white; padding: 10px; border: none; border-radius: 8px; flex: 1; cursor: pointer;">
+                📥 Importar Backup
+            </button>
+            <input type="file" id="inputImportar" style="display: none;" accept=".csv" onchange="importarCSV(event)">
+            
+            <button onclick="exportarCSV()" style="background: #64748b; color: white; padding: 10px; border: none; border-radius: 8px; flex: 1; cursor: pointer;">
+                📊 Exportar CSV
+            </button>
+        </div>
+    </div>
 
-<script>
-    // --- COLE SUA LISTA DE MORADORES AQUI ---
-    const agendaMoradores = {
-        "Gate101": "11999999999",
-        "Gate102": "11888888888",
-        "Way101": "11777777777",
-        // ... continue colando sua lista aqui
-    };
+    <div class="container" style="overflow-x: auto;">
+        <h3>📋 Registros</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>NF</th>
+                    <th>Local</th>
+                    <th>Nome</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="listaCorpo"></tbody>
+        </table>
+    </div>
+</main>
 
-    let encomendas = JSON.parse(localStorage.getItem('banco_gate')) || [];
-    let html5QrCode;
+<button id="btnTopo" onclick="window.scrollTo({top:0, behavior:'smooth'})" style="display:none; position:fixed; bottom:20px; right:20px; background:#15803d; color:white; border:none; width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:20px;">⬆️</button>
 
-    // FUNÇÃO QUE PUXA O TELEFONE (IGUAL ANTES)
-    function buscarContato() {
-        const torre = document.getElementById('torre').value;
-        const sala = document.getElementById('sala').value.trim();
-        const campoTel = document.getElementById('telefone');
-        const chave = torre + sala;
-
-        if (agendaMoradores[chave]) {
-            campoTel.value = agendaMoradores[chave];
-            campoTel.style.background = "#dcfce7";
-        } else {
-            campoTel.value = "";
-            campoTel.style.background = "#e2e8f0";
-        }
-    }
-
-    // FUNÇÃO DA CÂMERA
-    function iniciarLeitor() {
-        document.getElementById('reader').style.display = 'block';
-        document.getElementById('btnFecharCam').style.display = 'block';
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: 250 },
-            (text) => {
-                document.getElementById('notaFiscal').value = text;
-                pararLeitor();
-            }
-        ).catch(err => alert("Erro na câmera. Verifique a permissão."));
-    }
-
-    function pararLeitor() {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                document.getElementById('reader').style.display = 'none';
-                document.getElementById('btnFecharCam').style.display = 'none';
-            });
-        }
-    }
-
-    // SALVAR
-    document.getElementById('formEncomenda').onsubmit = (e) => {
-        e.preventDefault();
-        const nova = {
-            data: new Date().toLocaleDateString('pt-BR'),
-            nf: document.getElementById('notaFiscal').value,
-            torre: document.getElementById('torre').value,
-            sala: document.getElementById('sala').value,
-            nome: document.getElementById('destinatario').value,
-            status: 'Aguardando retirada'
-        };
-        encomendas.push(nova);
-        localStorage.setItem('banco_gate', JSON.stringify(encomendas));
-        e.target.reset();
-        buscarContato();
-        render();
-    };
-
-    function render() {
-        const lista = document.getElementById('lista');
-        lista.innerHTML = encomendas.map(enc => `
-            <tr>
-                <td>${enc.data}</td>
-                <td>${enc.nf}</td>
-                <td>${enc.torre} ${enc.sala}</td>
-                <td>${enc.nome}</td>
-                <td class="${enc.status === 'Retirado' ? 'status-retirado' : 'status-aguardando'}">${enc.status}</td>
-            </tr>
-        `).reverse().join('');
-    }
-
-    // IMPORTAR BACKUP (PARA RECUPERAR O QUE VOCÊ EXPORTOU)
-    function importarCSV(event) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const linhas = e.target.result.split('\n');
-            for (let i = 1; i < linhas.length; i++) {
-                const col = linhas[i].split(';');
-                if (col.length >= 4) {
-                    encomendas.push({
-                        data: col[0], nf: col[1], torre: col[2], sala: col[3], nome: col[4], status: col[5] || 'Aguardando retirada'
-                    });
-                }
-            }
-            localStorage.setItem('banco_gate', JSON.stringify(encomendas));
-            render();
-            alert("Dados recuperados!");
-        };
-        reader.readAsText(event.target.files[0]);
-    }
-
-    function exportarCSV() {
-        let csv = "\ufeffData;NF;Torre;Sala;Nome;Status\n";
-        encomendas.forEach(e => {
-            csv += `${e.data};${e.nf};${e.torre};${e.sala};${e.nome};${e.status}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "encomendas_gate.csv";
-        link.click();
-    }
-
-    render();
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
